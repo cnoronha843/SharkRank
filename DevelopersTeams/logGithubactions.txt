@@ -1,0 +1,46 @@
+4s
+Run npx tsc --noEmit
+Error: __tests__/DashboardScreen.test.tsx(6,1): error TS2708: Cannot use namespace 'jest' as a value.
+Error: __tests__/DashboardScreen.test.tsx(8,22): error TS2708: Cannot use namespace 'jest' as a value.
+Error: __tests__/DashboardScreen.test.tsx(9,27): error TS2708: Cannot use namespace 'jest' as a value.
+Error: __tests__/DashboardScreen.test.tsx(14,1): error TS2708: Cannot use namespace 'jest' as a value.
+Error: __tests__/DashboardScreen.test.tsx(15,12): error TS2708: Cannot use namespace 'jest' as a value.
+Error: __tests__/DashboardScreen.test.tsx(18,1): error TS2582: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
+Error: __tests__/DashboardScreen.test.tsx(19,3): error TS2582: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
+Error: __tests__/DashboardScreen.test.tsx(23,5): error TS2304: Cannot find name 'expect'.
+Error: __tests__/DashboardScreen.test.tsx(24,5): error TS2304: Cannot find name 'expect'.
+Error: __tests__/DashboardScreen.test.tsx(27,5): error TS2304: Cannot find name 'expect'.
+Error: __tests__/DashboardScreen.test.tsx(28,5): error TS2304: Cannot find name 'expect'.
+Error: __tests__/DashboardScreen.test.tsx(29,5): error TS2304: Cannot find name 'expect'.
+Error: __tests__/DashboardScreen.test.tsx(30,5): error TS2304: Cannot find name 'expect'.
+Error: __tests__/DashboardScreen.test.tsx(33,3): error TS2582: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
+Error: __tests__/DashboardScreen.test.tsx(37,5): error TS2304: Cannot find name 'expect'.
+Error: __tests__/DashboardScreen.test.tsx(40,5): error TS2304: Cannot find name 'expect'.
+Error: __tests__/DashboardScreen.test.tsx(41,5): error TS2304: Cannot find name 'expect'.
+Error: __tests__/DashboardScreen.test.tsx(42,5): error TS2304: Cannot find name 'expect'.
+Error: __tests__/SharkVisionScreen.test.tsx(5,1): error TS2582: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
+Error: __tests__/SharkVisionScreen.test.tsx(6,3): error TS2582: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
+Error: __tests__/SharkVisionScreen.test.tsx(10,5): error TS2304: Cannot find name 'expect'.
+Error: __tests__/SharkVisionScreen.test.tsx(11,5): error TS2304: Cannot find name 'expect'.
+Error: __tests__/SharkVisionScreen.test.tsx(14,3): error TS2582: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha`.
+Error: __tests__/SharkVisionScreen.test.tsx(18,5): error TS2304: Cannot find name 'expect'.
+Error: __tests__/SharkVisionScreen.test.tsx(19,5): error TS2304: Cannot find name 'expect'.
+Error: src/components/MatchTimeline.tsx(7,12): error TS2304: Cannot find name 'int'.
+Error: src/components/MatchTimeline.tsx(8,12): error TS2304: Cannot find name 'int'.
+Error: src/components/SharkVisionCamera.tsx(25,13): error TS2353: Object literal may only specify known properties, and 'quality' does not exist in type 'CameraRecordingOptions'.
+Error: src/screens/PlayerSelectScreen.tsx(207,26): error TS2339: Property 'confirmBtn' does not exist on type '{ container: { flex: number; backgroundColor: "#060B18"; }; header: { paddingHorizontal: 16; paddingTop: 16; paddingBottom: 8; }; cancelText: { fontSize: number; color: "#00D4FF"; marginBottom: number; }; ... 29 more ...; btnText: { ...; }; }'.
+Error: src/screens/PlayerSelectScreen.tsx(207,70): error TS2339: Property 'confirmBtnDisabled' does not exist on type '{ container: { flex: number; backgroundColor: "#060B18"; }; header: { paddingHorizontal: 16; paddingTop: 16; paddingBottom: 8; }; cancelText: { fontSize: number; color: "#00D4FF"; marginBottom: number; }; ... 29 more ...; btnText: { ...; }; }'.
+Error: src/screens/TrackerScreen.tsx(223,45): error TS2339: Property 'configBtn' does not exist on type '{ container: { flex: number; backgroundColor: "#060B18"; }; scoreboard: { flexDirection: "row"; backgroundColor: "#0F172A"; padding: number; margin: number; borderRadius: 24; }; scoreTeam: { flex: number; alignItems: "center"; }; ... 51 more ...; newMatchBtnText: { ...; }; }'.
+Error: src/screens/TrackerScreen.tsx(224,45): error TS2339: Property 'configBtn' does not exist on type '{ container: { flex: number; backgroundColor: "#060B18"; }; scoreboard: { flexDirection: "row"; backgroundColor: "#0F172A"; padding: number; margin: number; borderRadius: 24; }; scoreTeam: { flex: number; alignItems: "center"; }; ... 51 more ...; newMatchBtnText: { ...; }; }'.
+Error: src/screens/TrackerScreen.tsx(229,45): error TS2339: Property 'configBtn' does not exist on type '{ container: { flex: number; backgroundColor: "#060B18"; }; scoreboard: { flexDirection: "row"; backgroundColor: "#0F172A"; padding: number; margin: number; borderRadius: 24; }; scoreTeam: { flex: number; alignItems: "center"; }; ... 51 more ...; newMatchBtnText: { ...; }; }'.
+Error: src/screens/TrackerScreen.tsx(230,45): error TS2339: Property 'configBtn' does not exist on type '{ container: { flex: number; backgroundColor: "#060B18"; }; scoreboard: { flexDirection: "row"; backgroundColor: "#0F172A"; padding: number; margin: number; borderRadius: 24; }; scoreTeam: { flex: number; alignItems: "center"; }; ... 51 more ...; newMatchBtnText: { ...; }; }'.
+Error: src/screens/TrackerScreen.tsx(231,45): error TS2339: Property 'configBtn' does not exist on type '{ container: { flex: number; backgroundColor: "#060B18"; }; scoreboard: { flexDirection: "row"; backgroundColor: "#0F172A"; padding: number; margin: number; borderRadius: 24; }; scoreTeam: { flex: number; alignItems: "center"; }; ... 51 more ...; newMatchBtnText: { ...; }; }'.
+Error: src/screens/TrackerScreen.tsx(236,46): error TS2339: Property 'configBtn' does not exist on type '{ container: { flex: number; backgroundColor: "#060B18"; }; scoreboard: { flexDirection: "row"; backgroundColor: "#0F172A"; padding: number; margin: number; borderRadius: 24; }; scoreTeam: { flex: number; alignItems: "center"; }; ... 51 more ...; newMatchBtnText: { ...; }; }'.
+Error: src/screens/TrackerScreen.tsx(236,83): error TS2339: Property 'activeBtn' does not exist on type '{ container: { flex: number; backgroundColor: "#060B18"; }; scoreboard: { flexDirection: "row"; backgroundColor: "#0F172A"; padding: number; margin: number; borderRadius: 24; }; scoreTeam: { flex: number; alignItems: "center"; }; ... 51 more ...; newMatchBtnText: { ...; }; }'.
+Error: src/screens/TrackerScreen.tsx(237,46): error TS2339: Property 'configBtn' does not exist on type '{ container: { flex: number; backgroundColor: "#060B18"; }; scoreboard: { flexDirection: "row"; backgroundColor: "#0F172A"; padding: number; margin: number; borderRadius: 24; }; scoreTeam: { flex: number; alignItems: "center"; }; ... 51 more ...; newMatchBtnText: { ...; }; }'.
+Error: src/screens/TrackerScreen.tsx(237,84): error TS2339: Property 'activeBtn' does not exist on type '{ container: { flex: number; backgroundColor: "#060B18"; }; scoreboard: { flexDirection: "row"; backgroundColor: "#0F172A"; padding: number; margin: number; borderRadius: 24; }; scoreTeam: { flex: number; alignItems: "center"; }; ... 51 more ...; newMatchBtnText: { ...; }; }'.
+Error: src/screens/TrackerScreen.tsx(244,49): error TS2339: Property 'configBtn' does not exist on type '{ container: { flex: number; backgroundColor: "#060B18"; }; scoreboard: { flexDirection: "row"; backgroundColor: "#0F172A"; padding: number; margin: number; borderRadius: 24; }; scoreTeam: { flex: number; alignItems: "center"; }; ... 51 more ...; newMatchBtnText: { ...; }; }'.
+Error: src/screens/TrackerScreen.tsx(245,49): error TS2339: Property 'configBtn' does not exist on type '{ container: { flex: number; backgroundColor: "#060B18"; }; scoreboard: { flexDirection: "row"; backgroundColor: "#0F172A"; padding: number; margin: number; borderRadius: 24; }; scoreTeam: { flex: number; alignItems: "center"; }; ... 51 more ...; newMatchBtnText: { ...; }; }'.
+Error: src/screens/TrackerScreen.tsx(246,49): error TS2339: Property 'configBtn' does not exist on type '{ container: { flex: number; backgroundColor: "#060B18"; }; scoreboard: { flexDirection: "row"; backgroundColor: "#0F172A"; padding: number; margin: number; borderRadius: 24; }; scoreTeam: { flex: number; alignItems: "center"; }; ... 51 more ...; newMatchBtnText: { ...; }; }'.
+Error: src/screens/TrackerScreen.tsx(251,43): error TS2339: Property 'startBtn' does not exist on type '{ container: { flex: number; backgroundColor: "#060B18"; }; scoreboard: { flexDirection: "row"; backgroundColor: "#0F172A"; padding: number; margin: number; borderRadius: 24; }; scoreTeam: { flex: number; alignItems: "center"; }; ... 51 more ...; newMatchBtnText: { ...; }; }'.
+Error: Process completed with exit code 2.

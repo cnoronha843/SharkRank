@@ -251,6 +251,11 @@ const styles = StyleSheet.create({
     padding: SPACING.md, backgroundColor: 'rgba(6, 11, 24, 0.95)',
     borderTopWidth: 1, borderTopColor: COLORS.border,
   },
+  confirmBtn: {
+    backgroundColor: COLORS.accent, padding: 16, borderRadius: BORDER_RADIUS.md,
+    alignItems: 'center',
+  },
+  confirmBtnDisabled: { opacity: 0.3 },
   confirmBtnText: { fontSize: 16, fontWeight: '700', color: COLORS.bgPrimary },
   
   empty: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },

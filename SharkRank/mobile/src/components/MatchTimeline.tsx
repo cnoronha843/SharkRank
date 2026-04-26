@@ -4,8 +4,8 @@ import { COLORS, SPACING, BORDER_RADIUS } from '../theme';
 
 interface Match {
   match_id: string;
-  score_a: int;
-  score_b: int;
+  score_a: number;
+  score_b: number;
   team_a: string[];
   team_b: string[];
   created_at: string;

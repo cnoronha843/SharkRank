@@ -488,6 +488,15 @@ const styles = StyleSheet.create({
   eloRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
   eloPlayer: { color: COLORS.textPrimary, fontSize: 16 },
   eloValue: { color: COLORS.accent, fontSize: 16, fontWeight: 'bold' },
+  configBtn: {
+    flex: 1, backgroundColor: COLORS.bgTertiary, padding: 12, borderRadius: 10,
+    alignItems: 'center', borderWidth: 1, borderColor: COLORS.border,
+  },
+  activeBtn: { borderColor: COLORS.accent, backgroundColor: 'rgba(0, 212, 255, 0.15)' },
+  startBtn: {
+    backgroundColor: COLORS.accent, padding: 16, borderRadius: BORDER_RADIUS.md,
+    alignItems: 'center', marginTop: 10,
+  },
   newMatchBtn: { backgroundColor: COLORS.accent, padding: 16, borderRadius: BORDER_RADIUS.md, width: '100%', alignItems: 'center' },
   newMatchBtnText: { color: COLORS.bgPrimary, fontSize: 16, fontWeight: 'bold' },
 });

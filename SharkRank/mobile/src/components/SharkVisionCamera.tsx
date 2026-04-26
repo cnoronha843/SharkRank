@@ -22,7 +22,6 @@ export const SharkVisionCamera = forwardRef<SharkVisionHandle>((props, ref) => {
           setIsRecording(true);
           recordingPromise.current = cameraRef.current.recordAsync({
             maxDuration: 30,
-            quality: '720p',
           });
           return "recording_started";
         } catch (e) {
