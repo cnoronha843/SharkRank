@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#060B18">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="SharkRank - Telemetria e nivelamento técnico de atletas de futevôlei">
+  <title>SharkRank 🦈 Futevôlei Analytics</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <!-- Splash Screen -->
+  <div class="splash" id="splash">
+    <div class="splash-logo">🦈</div>
+    <div class="splash-title">SharkRank</div>
+    <div class="splash-sub">Telemetria de Futevôlei</div>
+    <div class="splash-loader"></div>
+  </div>
+
+  <div id="app">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-brand">
+        <span>🦈</span>
+        <span>SharkRank</span>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content" id="main-content" style="transition:opacity 0.15s ease"></main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" data-screen="dashboard">
+        <span>🏠</span><span>Home</span>
+      </button>
+      <button class="nav-item" data-screen="athletes">
+        <span>👥</span><span>Atletas</span>
+      </button>
+      <button class="nav-item center-btn" data-screen="assess">
+        <span>⚡</span><span>Avaliar</span>
+      </button>
+      <button class="nav-item" data-screen="ranking">
+        <span>🏆</span><span>Ranking</span>
+      </button>
+      <button class="nav-item" data-screen="settings">
+        <span>⚙️</span><span>Config</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal" id="modal-body"></div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "SharkRank - Futevôlei Analytics",
+  "short_name": "SharkRank",
+  "description": "Telemetria e nivelamento técnico de atletas de futevôlei",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#060B18",
+  "theme_color": "#00D4FF",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='40' fill='%23060B18'/><text x='96' y='120' font-size='100' text-anchor='middle'>🦈</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ]
+}

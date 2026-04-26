@@ -1,0 +1,16 @@
+# Root Gitignore for SharkRank SaaS
+token.txt
+*.resolved
+*.log
+.DS_Store
+
+# Mobile (handled by sub-gitignore but adding just in case)
+SharkRank/mobile/node_modules/
+SharkRank/mobile/.expo/
+SharkRank/mobile/dist/
+
+# Backend (handled by sub-gitignore but adding just in case)
+SharkRank/backend/__pycache__/
+SharkRank/backend/venv/
+SharkRank/backend/.env
+SharkRank/backend/.pytest_cache
