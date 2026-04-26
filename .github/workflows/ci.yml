@@ -43,7 +43,7 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-      - run: pip install pytest pytest-cov fastapi uvicorn pydantic httpx
+      - run: pip install -r requirements.txt pytest pytest-cov httpx
       - name: "Run tests (including ELO contract: ≤5pts in ≥95%)"
         run: python -m pytest tests/ -v --tb=short --cov=app --cov-report=term-missing
       - name: "Fail if coverage < 80%"
@@ -63,7 +63,7 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: SharkRank/mobile/package-lock.json
-      - run: npm ci
+      - run: npm ci --legacy-peer-deps
       - run: npx tsc --noEmit
 
   mobile-lint:
@@ -92,7 +92,7 @@ jobs:
       - name: "NPM Audit (Mobile)"
         working-directory: SharkRank/mobile
         run: |
-          npm ci
+          npm ci --legacy-peer-deps
           npm audit --audit-level=critical || true
       - name: "Python Safety Check (Backend)"
         working-directory: SharkRank/backend
