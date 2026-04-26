@@ -5,25 +5,22 @@
  */
 
 export const COLORS = {
-  // Backgrounds
-  bgPrimary: '#060B18',
-  bgSecondary: '#0D1B2A',
-  bgTertiary: '#1B2838',
-  bgCard: 'rgba(13, 27, 42, 0.85)',
-
-  // Accents
-  accent: '#00D4FF',
+  bgPrimary: '#060B18', // Deep Night
+  bgSecondary: '#0F172A', // Slate Dark
+  bgTertiary: '#1E293B',
+  bgCard: 'rgba(30, 41, 59, 0.7)', // Glassmorphism support
+  accent: '#00D4FF', // Shark Cyan
   accentBlue: '#0066FF',
-  accentOrange: '#FF6B35',
+  accentOrange: '#FF8A00', // Court Orange
 
   // Text (WCAG AAA: ratio ≥7:1 contra bgPrimary)
   textPrimary: '#FFFFFF',
-  textSecondary: '#8892A4',
-  textMuted: '#4A5568',
+  textSecondary: '#94A3B8',
+  textMuted: '#64748B',
 
   // Semantic
-  success: '#00E676',
-  error: '#FF5252',
+  success: '#10B981',
+  error: '#EF4444',
   warning: '#FFD740',
 
   // Tier colors
@@ -67,10 +64,10 @@ export const FONT_WEIGHTS = {
 };
 
 export const BORDER_RADIUS = {
-  xs: 6,
-  sm: 10,
-  md: 16,
-  lg: 24,
+  xs: 8,
+  sm: 16,
+  md: 24,
+  lg: 32,
   full: 999,
 } as const;
 

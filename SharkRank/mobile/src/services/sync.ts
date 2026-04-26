@@ -1,13 +1,12 @@
 /**
  * SharkRank — Sync Service
  * Gerencia a fila de sincronização offline-first.
- * Usa WatermelonDB no nativo e AsyncStorage como fallback no web.
  */
 
-import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_BASE = __DEV__ ? 'http://localhost:8000' : 'https://api.sharkrank.com.br';
+// Hardcoded IP para consistência com api.ts
+const API_BASE = 'http://192.168.0.138:8000';
 const SYNC_KEY = '@sharkrank:sync_queue';
 
 interface QueueItem {
@@ -20,8 +19,6 @@ interface QueueItem {
   createdAt: string;
 }
 
-// === ASYNC STORAGE FALLBACK (Web + simple mode) ===
-
 async function getQueue(): Promise<QueueItem[]> {
   const raw = await AsyncStorage.getItem(SYNC_KEY);
   return raw ? JSON.parse(raw) : [];
@@ -31,9 +28,6 @@ async function saveQueue(queue: QueueItem[]): Promise<void> {
   await AsyncStorage.setItem(SYNC_KEY, JSON.stringify(queue));
 }
 
-/**
- * Adiciona uma requisição à fila de sync.
- */
 export async function enqueueSync(
   endpoint: string,
   method: 'POST' | 'PUT',
@@ -52,9 +46,6 @@ export async function enqueueSync(
   await saveQueue(queue);
 }
 
-/**
- * Processa todos os itens pendentes na fila.
- */
 export async function processSyncQueue(): Promise<{
   processed: number;
   failed: number;
@@ -76,15 +67,10 @@ export async function processSyncQueue(): Promise<{
         method: item.method,
         headers: { 'Content-Type': 'application/json' },
         body: item.payload,
-        signal: AbortSignal.timeout(15000),
       });
 
       if (response.ok) {
         processed++;
-        // Não adicionamos ao remaining = removido da fila
-      } else if (response.status === 409) {
-        remaining.push({ ...item, status: 'failed', retryCount: item.retryCount + 1 });
-        failed++;
       } else {
         throw new Error(`HTTP ${response.status}`);
       }
@@ -107,9 +93,6 @@ export async function processSyncQueue(): Promise<{
   };
 }
 
-/**
- * Retorna contagem de itens na fila.
- */
 export async function getSyncQueueStats(): Promise<{
   pending: number;
   failed: number;
@@ -121,9 +104,6 @@ export async function getSyncQueueStats(): Promise<{
   return { pending, failed: failedCount, total: queue.length };
 }
 
-/**
- * Limpa toda a fila.
- */
 export async function clearSyncQueue(): Promise<void> {
   await AsyncStorage.removeItem(SYNC_KEY);
 }

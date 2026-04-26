@@ -1,5 +1,5 @@
 /**
- * SharkRank â€” App Entry Point
+ * SharkRank — App Entry Point
  * 4 tabs: Dashboard, Tracker (central), Ranking, Config.
  * Feature flags carregadas no startup.
  */
@@ -9,6 +9,7 @@ import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Text, View, StyleSheet, ActivityIndicator } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { DashboardScreen } from './src/screens/DashboardScreen';
 import { TrackerScreen } from './src/screens/TrackerScreen';
@@ -16,7 +17,7 @@ import { RankingScreen } from './src/screens/RankingScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
 import { COLORS } from './src/theme';
 import { loadFlags } from './src/services/flags';
-import { processSyncQueue } from './src/services/api';
+import { processSyncQueue } from './src/services/sync';
 
 const Tab = createBottomTabNavigator();
 
@@ -45,7 +46,7 @@ function TabIcon({ emoji, focused }: { emoji: string; focused: boolean }) {
 function CenterTabIcon({ focused }: { focused: boolean }) {
   return (
     <View style={[styles.centerBtn, focused && styles.centerBtnActive]}>
-      <Text style={{ fontSize: 24 }}>âš¡</Text>
+      <Text style={{ fontSize: 24 }}>⚡</Text>
     </View>
   );
 }
@@ -55,10 +56,15 @@ export default function App() {
 
   useEffect(() => {
     async function bootstrap() {
-      await loadFlags();
-      // NÃ£o damos await no sync para nÃ£o travar a abertura do app
-      processSyncQueue().catch(e => console.error("Sync error:", e));
-      setReady(true);
+      try {
+        await loadFlags();
+        // Não damos await no sync para não travar a abertura do app
+        processSyncQueue().catch(e => console.error("Sync error:", e));
+      } catch (e) {
+        console.error("Bootstrap error:", e);
+      } finally {
+        setReady(true);
+      }
     }
     bootstrap();
   }, []);
@@ -66,80 +72,93 @@ export default function App() {
   if (!ready) {
     return (
       <View style={styles.splash}>
-        <Text style={{ fontSize: 64 }}>ðŸ¦ˆ</Text>
+        <Text style={{ fontSize: 64 }}>🦈</Text>
         <ActivityIndicator color={COLORS.accent} style={{ marginTop: 20 }} />
       </View>
     );
   }
 
   return (
-    <NavigationContainer theme={SharkTheme}>
-      <StatusBar style="light" />
-      <Tab.Navigator
-        screenOptions={{
-          headerShown: false,
-          tabBarStyle: {
-            backgroundColor: 'rgba(6, 11, 24, 0.95)',
-            borderTopColor: COLORS.border,
-            borderTopWidth: 1,
-            height: 70,
-            paddingBottom: 10,
-            paddingTop: 8,
-          },
-          tabBarActiveTintColor: COLORS.accent,
-          tabBarInactiveTintColor: COLORS.textMuted,
-          tabBarLabelStyle: { fontSize: 10, fontWeight: '500' },
-        }}
-      >
-        <Tab.Screen
-          name="Dashboard"
-          component={DashboardScreen}
-          options={{
-            tabBarLabel: 'Home',
-            tabBarIcon: ({ focused }) => <TabIcon emoji="ðŸ " focused={focused} />,
+    <SafeAreaProvider>
+      <NavigationContainer theme={SharkTheme}>
+        <StatusBar style="light" />
+        <Tab.Navigator
+          screenOptions={{
+            headerShown: false,
+            tabBarStyle: {
+              backgroundColor: COLORS.bgCard,
+              borderTopWidth: 0,
+              position: 'absolute',
+              bottom: 25,
+              left: 20,
+              right: 20,
+              height: 70,
+              borderRadius: 24,
+              paddingBottom: 12,
+              paddingTop: 10,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 10 },
+              shadowOpacity: 0.5,
+              shadowRadius: 20,
+              elevation: 15,
+              borderWidth: 1,
+              borderColor: COLORS.border,
+            },
+            tabBarActiveTintColor: COLORS.accent,
+            tabBarInactiveTintColor: COLORS.textMuted,
+            tabBarLabelStyle: { fontSize: 10, fontWeight: '700', marginBottom: -5 },
           }}
-        />
-        <Tab.Screen
-          name="Tracker"
-          component={TrackerScreen}
-          options={{
-            tabBarLabel: '',
-            tabBarIcon: ({ focused }) => <CenterTabIcon focused={focused} />,
-          }}
-        />
-        <Tab.Screen
-          name="Ranking"
-          component={RankingScreen}
-          options={{
-            tabBarLabel: 'Ranking',
-            tabBarIcon: ({ focused }) => <TabIcon emoji="ðŸ†" focused={focused} />,
-          }}
-        />
-        <Tab.Screen
-          name="Settings"
-          component={SettingsScreen}
-          options={{
-            tabBarLabel: 'Config',
-            tabBarIcon: ({ focused }) => <TabIcon emoji="âš™ï¸" focused={focused} />,
-          }}
-        />
-      </Tab.Navigator>
-    </NavigationContainer>
+        >
+          <Tab.Screen
+            name="Dashboard"
+            component={DashboardScreen}
+            options={{
+              tabBarLabel: 'Home',
+              tabBarIcon: ({ focused }) => <TabIcon emoji="🏠" focused={focused} />,
+            }}
+          />
+          <Tab.Screen
+            name="Tracker"
+            component={TrackerScreen}
+            options={{
+              tabBarLabel: '',
+              tabBarIcon: ({ focused }) => <CenterTabIcon focused={focused} />,
+            }}
+          />
+          <Tab.Screen
+            name="Ranking"
+            component={RankingScreen}
+            options={{
+              tabBarLabel: 'Ranking',
+              tabBarIcon: ({ focused }) => <TabIcon emoji="🏆" focused={focused} />,
+            }}
+          />
+          <Tab.Screen
+            name="Settings"
+            component={SettingsScreen}
+            options={{
+              tabBarLabel: 'Config',
+              tabBarIcon: ({ focused }) => <TabIcon emoji="⚙️" focused={focused} />,
+            }}
+          />
+        </Tab.Navigator>
+      </NavigationContainer>
+    </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
   centerBtn: {
-    width: 52, height: 52, borderRadius: 26,
-    backgroundColor: COLORS.bgTertiary, justifyContent: 'center',
-    alignItems: 'center', marginBottom: 20,
-    shadowColor: COLORS.accent, shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3, shadowRadius: 10, elevation: 8,
+    width: 60, height: 60, borderRadius: 30,
+    backgroundColor: COLORS.accent, justifyContent: 'center',
+    alignItems: 'center', marginBottom: 35,
+    shadowColor: COLORS.accent, shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.6, shadowRadius: 15, elevation: 12,
+    borderWidth: 4, borderColor: COLORS.bgPrimary,
   },
-  centerBtnActive: { backgroundColor: COLORS.accentBlue },
+  centerBtnActive: { backgroundColor: COLORS.accentOrange, shadowColor: COLORS.accentOrange },
   splash: {
     flex: 1, backgroundColor: COLORS.bgPrimary,
     justifyContent: 'center', alignItems: 'center',
   },
 });
-

@@ -3,14 +3,20 @@
  * Decisão #3: Em SHADOW_MODE, mostra placeholder em vez do ranking real.
  */
 
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, FlatList, ActivityIndicator, TouchableOpacity, Modal } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { StyleSheet, Text, View, FlatList, ActivityIndicator, TouchableOpacity, Modal, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, SPACING, BORDER_RADIUS, getTier } from '../theme';
 import { api } from '../services/api';
 import { getFlag } from '../services/flags';
 import { PaywallScreen } from './PaywallScreen';
 import { checkPremiumStatus, setupRevenueCat } from '../services/revenueCat';
+import { RadarChart } from '../components/RadarChart';
+import { MatchTimeline } from '../components/MatchTimeline';
+import { ShareCard } from '../components/ShareCard';
+import { ScrollView } from 'react-native';
+import { captureRef } from 'react-native-view-shot';
+import * as Sharing from 'expo-sharing';
 
 interface Player {
   id: string;
@@ -26,13 +32,19 @@ export function RankingScreen() {
   const [isShadow, setIsShadow] = useState(getFlag('SHADOW_MODE'));
   const [showPaywall, setShowPaywall] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
+  const [playerStats, setPlayerStats] = useState<any>(null);
+  const [playerMatches, setPlayerMatches] = useState<any[]>([]);
+  const [loadingStats, setLoadingStats] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  
+  const shareCardRef = useRef<View>(null);
 
   useEffect(() => {
     async function init() {
       await setupRevenueCat('arena-blumenau-01');
       const isPremium = await checkPremiumStatus();
       if (isPremium) {
-        setIsShadow(false); // Override local flag se premium
+        setIsShadow(false);
       }
       
       if (!isShadow && !isPremium) loadRanking();
@@ -41,12 +53,57 @@ export function RankingScreen() {
     init();
   }, [isShadow]);
 
+  useEffect(() => {
+    if (selectedPlayer) {
+      loadPlayerData(selectedPlayer.id);
+    } else {
+      setPlayerStats(null);
+      setPlayerMatches([]);
+    }
+  }, [selectedPlayer]);
+
   const loadRanking = async () => {
     try {
       const data = await api.getArenaRanking('arena-blumenau-01');
       setPlayers(data.ranking);
     } catch {} finally {
       setLoading(false);
+    }
+  };
+
+  const loadPlayerData = async (pid: string) => {
+    setLoadingStats(true);
+    try {
+      const [statsData, matchesData] = await Promise.all([
+        api.getPlayerStats(pid),
+        api.getPlayerMatches(pid),
+      ]);
+      setPlayerStats(statsData.stats);
+      setPlayerMatches(matchesData.matches);
+    } catch (e) {
+      console.error("Error loading player data", e);
+    } finally {
+      setLoadingStats(false);
+    }
+  };
+
+  const handleShare = async () => {
+    if (sharing) return;
+    setSharing(true);
+    try {
+      const uri = await captureRef(shareCardRef, {
+        format: 'png',
+        quality: 0.9,
+      });
+      await Sharing.shareAsync(uri, {
+        mimeType: 'image/png',
+        dialogTitle: 'Compartilhar meu Ranking',
+        UTI: 'public.png',
+      });
+    } catch (e) {
+      Alert.alert('Erro', 'Não foi possível gerar a imagem de compartilhamento.');
+    } finally {
+      setSharing(false);
     }
   };
 
@@ -133,49 +190,96 @@ export function RankingScreen() {
       )}
 
       {/* Modal de Perfil de Jogador */}
-      <Modal visible={!!selectedPlayer} transparent animationType="fade">
+      <Modal visible={!!selectedPlayer} transparent animationType="slide">
         {selectedPlayer && (() => {
           const tier = getTier(selectedPlayer.rating);
-          const wins = selectedPlayer.wins || 0;
-          const losses = selectedPlayer.matches_played - wins;
-          const winRate = selectedPlayer.matches_played > 0 
-            ? Math.round((wins / selectedPlayer.matches_played) * 100) 
-            : 0;
+          const wins = playerStats?.wins || 0;
+          const losses = playerStats?.losses || 0;
+          const total = wins + losses;
+          const winRate = total > 0 ? Math.round((wins / total) * 100) : 0;
+
+          // Dados fake para o radar caso ainda não tenha muitos fundamentos marcados
+          const radarData = [
+            { label: 'Ataque', value: playerStats?.fundamentals?.shark_ataque ? Math.min(playerStats.fundamentals.shark_ataque * 10, 100) : 45 },
+            { label: 'Defesa', value: playerStats?.fundamentals?.coxa ? Math.min(playerStats.fundamentals.coxa * 8, 100) : 60 },
+            { label: 'Recepção', value: playerStats?.fundamentals?.peito ? Math.min(playerStats.fundamentals.peito * 12, 100) : 55 },
+            { label: 'Precisão', value: 75 },
+            { label: 'Vigor', value: Math.min(selectedPlayer.matches_played * 5, 100) },
+          ];
 
           return (
             <View style={styles.modalBg}>
               <View style={styles.modalContent}>
-                <View style={styles.modalHeader}>
-                  <Text style={styles.modalEmoji}>{tier.emoji}</Text>
-                  <Text style={styles.modalPlayerName}>{selectedPlayer.name}</Text>
-                  <Text style={[styles.modalTierName, {color: tier.color}]}>{tier.name} ({selectedPlayer.rating} ELO)</Text>
-                </View>
-
-                <View style={styles.statsGrid}>
-                  <View style={styles.statBox}>
-                    <Text style={styles.statValue}>{selectedPlayer.matches_played}</Text>
-                    <Text style={styles.statLabel}>Partidas</Text>
+                <ScrollView 
+                  style={{ width: '100%' }} 
+                  contentContainerStyle={{ alignItems: 'center' }}
+                  showsVerticalScrollIndicator={false}
+                >
+                  <View style={styles.modalHeader}>
+                    <Text style={styles.modalEmoji}>{tier.emoji}</Text>
+                    <Text style={styles.modalPlayerName}>{selectedPlayer.name}</Text>
+                    <Text style={[styles.modalTierName, {color: tier.color}]}>{tier.name} ({selectedPlayer.rating} ELO)</Text>
                   </View>
-                  <View style={styles.statBox}>
-                    <Text style={[styles.statValue, {color: COLORS.success}]}>{winRate}%</Text>
-                    <Text style={styles.statLabel}>Win Rate</Text>
-                  </View>
-                </View>
 
-                <View style={styles.wltRow}>
-                  <Text style={{color: COLORS.success, fontWeight: 'bold'}}>V: {wins}</Text>
-                  <Text style={{color: COLORS.textMuted}}> | </Text>
-                  <Text style={{color: COLORS.error, fontWeight: 'bold'}}>D: {losses}</Text>
-                </View>
+                  {loadingStats ? (
+                    <ActivityIndicator color={COLORS.accent} style={{ margin: 40 }} />
+                  ) : (
+                    <>
+                      <RadarChart data={radarData} size={180} />
 
-                <TouchableOpacity style={styles.closeBtn} onPress={() => setSelectedPlayer(null)}>
-                  <Text style={styles.closeBtnText}>Fechar Perfil</Text>
-                </TouchableOpacity>
+                      <View style={styles.statsGrid}>
+                        <View style={styles.statBox}>
+                          <Text style={styles.statValue}>{selectedPlayer.matches_played}</Text>
+                          <Text style={styles.statLabel}>Partidas</Text>
+                        </View>
+                        <View style={styles.statBox}>
+                          <Text style={[styles.statValue, {color: COLORS.success}]}>{winRate}%</Text>
+                          <Text style={styles.statLabel}>Win Rate</Text>
+                        </View>
+                      </View>
+
+                      <View style={styles.wltRow}>
+                        <Text style={{color: COLORS.success, fontWeight: 'bold'}}>V: {wins}</Text>
+                        <Text style={{color: COLORS.textMuted}}> | </Text>
+                        <Text style={{color: COLORS.error, fontWeight: 'bold'}}>D: {losses}</Text>
+                      </View>
+
+                      <MatchTimeline matches={playerMatches} playerId={selectedPlayer.id} />
+                    </>
+                  )}
+
+                  <TouchableOpacity 
+                    style={[styles.shareBtn, sharing && { opacity: 0.5 }]} 
+                    onPress={handleShare}
+                    disabled={sharing || loadingStats}
+                  >
+                    <Text style={styles.shareBtnText}>
+                      {sharing ? 'Gerando imagem...' : '📸 Compartilhar no Story'}
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity style={styles.closeBtn} onPress={() => setSelectedPlayer(null)}>
+                    <Text style={styles.closeBtnText}>Fechar Perfil</Text>
+                  </TouchableOpacity>
+                </ScrollView>
+              </View>
+
+              {/* ShareCard escondido para captura */}
+              <View style={{ position: 'absolute', left: -1000, top: 0 }}>
+                <View ref={shareCardRef} collapsable={false}>
+                  <ShareCard 
+                    player={selectedPlayer} 
+                    stats={playerStats} 
+                    radarData={radarData}
+                    arenaName="Arena Praia do Moura"
+                  />
+                </View>
               </View>
             </View>
           );
         })()}
       </Modal>
+
 
     </SafeAreaView>
   );
@@ -227,5 +331,15 @@ const styles = StyleSheet.create({
   wltRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 30, gap: 10 },
   closeBtn: { backgroundColor: COLORS.bgTertiary, padding: 15, borderRadius: BORDER_RADIUS.sm, width: '100%', alignItems: 'center' },
   closeBtnText: { color: COLORS.textPrimary, fontWeight: 'bold' },
+  shareBtn: { 
+    backgroundColor: COLORS.accentOrange, 
+    padding: 15, 
+    borderRadius: BORDER_RADIUS.sm, 
+    width: '100%', 
+    alignItems: 'center',
+    marginBottom: SPACING.sm,
+    marginTop: SPACING.lg,
+  },
+  shareBtnText: { color: COLORS.textPrimary, fontWeight: '900', fontSize: 14 },
 });
 

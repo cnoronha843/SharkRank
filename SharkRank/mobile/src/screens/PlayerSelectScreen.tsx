@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, SPACING, BORDER_RADIUS, getTier } from '../theme';
 import { api } from '../services/api';
+import { Modal, TextInput } from 'react-native';
 
 interface Player {
   id: string;
@@ -36,29 +37,43 @@ export function PlayerSelectScreen({ arenaId, onTeamsSelected, onCancel }: Props
   const [selected, setSelected] = useState<string[]>([]);
   const [step, setStep] = useState<'teamA' | 'teamB'>('teamA');
   const [teamA, setTeamA] = useState<Player[]>([]);
+  
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newPlayerName, setNewPlayerName] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     loadPlayers();
   }, []);
 
   const loadPlayers = async () => {
+    setLoading(true);
     try {
       const data = await api.getArenaPlayers(arenaId);
       setPlayers(data.players);
     } catch {
-      // Demo fallback
-      setPlayers([
-        { id: 'p-rafael', name: "Rafael 'Tubarão' Silva", rating: 1620, matches_played: 32 },
-        { id: 'p-lucas', name: "Lucas 'Foguete' Santos", rating: 1580, matches_played: 25 },
-        { id: 'p-mateus', name: "Mateus 'Trovão' Almeida", rating: 1555, matches_played: 28 },
-        { id: 'p-pedro', name: "Pedro 'Pantera' Oliveira", rating: 1520, matches_played: 18 },
-        { id: 'p-gabriel', name: "Gabriel 'Serpente' Lima", rating: 1510, matches_played: 15 },
-        { id: 'p-thiago', name: "Thiago 'Flash' Costa", rating: 1470, matches_played: 10 },
-        { id: 'p-andre', name: "André 'Máquina' Rocha", rating: 1445, matches_played: 8 },
-        { id: 'p-bruno', name: "Bruno 'Águia' Ferreira", rating: 1410, matches_played: 4 },
-      ]);
+      setPlayers([]); // Banco zerado conforme pedido
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAddPlayer = async () => {
+    if (!newPlayerName.trim()) return;
+    setSaving(true);
+    try {
+      await api.apiFetch(`/arenas/${arenaId}/players`, 'POST', {
+        name: newPlayerName,
+        nickname: newPlayerName.split(' ')[0],
+        position: 'Atacante',
+      });
+      setNewPlayerName('');
+      setShowAddModal(false);
+      loadPlayers(); // Recarrega a lista
+    } catch (e) {
+      console.error("Error adding player", e);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -89,16 +104,21 @@ export function PlayerSelectScreen({ arenaId, onTeamsSelected, onCancel }: Props
     <SafeAreaView style={styles.container} testID="sr_screen_player_select">
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={onCancel}>
-          <Text style={styles.cancelText}>← Voltar</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <TouchableOpacity onPress={onCancel}>
+            <Text style={styles.cancelText}>← Voltar</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setShowAddModal(true)}>
+            <Text style={[styles.cancelText, { color: COLORS.success }]}>+ Novo Atleta</Text>
+          </TouchableOpacity>
+        </View>
         <Text style={styles.title}>
           {step === 'teamA' ? '🔵 Selecione o Time A' : '🔴 Selecione o Time B'}
         </Text>
         <Text style={styles.subtitle}>Escolha 2 jogadores</Text>
       </View>
 
-      {/* Team A preview (when selecting team B) */}
+      {/* Team A preview... */}
       {step === 'teamB' && (
         <View style={styles.teamPreview}>
           <Text style={styles.teamPreviewLabel}>Time A:</Text>
@@ -111,6 +131,14 @@ export function PlayerSelectScreen({ arenaId, onTeamsSelected, onCancel }: Props
       {/* Player list */}
       {loading ? (
         <ActivityIndicator color={COLORS.accent} size="large" style={{ marginTop: 40 }} />
+      ) : players.length === 0 ? (
+        <View style={styles.empty}>
+          <Text style={styles.emptyEmoji}>👥</Text>
+          <Text style={styles.emptyText}>Nenhum atleta cadastrado.</Text>
+          <TouchableOpacity style={styles.emptyBtn} onPress={() => setShowAddModal(true)}>
+            <Text style={styles.emptyBtnText}>Cadastrar Primeiro Atleta</Text>
+          </TouchableOpacity>
+        </View>
       ) : (
         <FlatList
           data={availablePlayers}
@@ -129,7 +157,7 @@ export function PlayerSelectScreen({ arenaId, onTeamsSelected, onCancel }: Props
                 <View style={{ flex: 1, marginLeft: 12 }}>
                   <Text style={styles.playerName}>{item.name}</Text>
                   <Text style={[styles.playerTier, { color: tier.color }]}>
-                    {tier.name} · {item.rating} · {item.matches_played} partidas
+                    {tier.name} · {Math.round(item.rating)} ELO · {item.matches_played} partidas
                   </Text>
                 </View>
                 <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
@@ -140,6 +168,37 @@ export function PlayerSelectScreen({ arenaId, onTeamsSelected, onCancel }: Props
           }}
         />
       )}
+
+      {/* Modal de Cadastro (Sprint 7) */}
+      <Modal visible={showAddModal} transparent animationType="fade">
+        <View style={styles.modalBg}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Novo Atleta Estreante</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Nome Completo"
+              placeholderTextColor={COLORS.textMuted}
+              value={newPlayerName}
+              onChangeText={setNewPlayerName}
+              autoFocus
+            />
+            <Text style={styles.inputHint}>O atleta começará com 1000 de ELO (Estreante).</Text>
+            
+            <View style={styles.modalBtnRow}>
+              <TouchableOpacity style={styles.cancelModalBtn} onPress={() => setShowAddModal(false)}>
+                <Text style={styles.btnText}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.saveBtn, saving && { opacity: 0.5 }]} 
+                onPress={handleAddPlayer}
+                disabled={saving}
+              >
+                <Text style={styles.saveBtnText}>{saving ? 'Salvando...' : 'Cadastrar'}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Confirm button */}
       <View style={styles.footer}>
@@ -192,10 +251,25 @@ const styles = StyleSheet.create({
     padding: SPACING.md, backgroundColor: 'rgba(6, 11, 24, 0.95)',
     borderTopWidth: 1, borderTopColor: COLORS.border,
   },
-  confirmBtn: {
-    backgroundColor: COLORS.accent, paddingVertical: 14,
-    borderRadius: BORDER_RADIUS.sm, alignItems: 'center',
-  },
-  confirmBtnDisabled: { opacity: 0.4 },
   confirmBtnText: { fontSize: 16, fontWeight: '700', color: COLORS.bgPrimary },
+  
+  empty: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
+  emptyEmoji: { fontSize: 64, marginBottom: 20 },
+  emptyText: { color: COLORS.textSecondary, textAlign: 'center', marginBottom: 30 },
+  emptyBtn: { backgroundColor: COLORS.success, padding: 15, borderRadius: 10 },
+  emptyBtnText: { color: COLORS.bgPrimary, fontWeight: 'bold' },
+
+  modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'center', padding: 20 },
+  modalContent: { backgroundColor: COLORS.bgSecondary, padding: 25, borderRadius: 20 },
+  modalTitle: { color: COLORS.textPrimary, fontSize: 18, fontWeight: 'bold', marginBottom: 20 },
+  input: { 
+    backgroundColor: COLORS.bgTertiary, color: COLORS.textPrimary, padding: 15, 
+    borderRadius: 10, borderWidth: 1, borderColor: COLORS.border, fontSize: 16 
+  },
+  inputHint: { color: COLORS.textMuted, fontSize: 11, marginTop: 8, marginBottom: 20 },
+  modalBtnRow: { flexDirection: 'row', gap: 10 },
+  cancelModalBtn: { flex: 1, padding: 15, alignItems: 'center', borderRadius: 10, backgroundColor: COLORS.bgTertiary },
+  saveBtn: { flex: 2, padding: 15, alignItems: 'center', borderRadius: 10, backgroundColor: COLORS.success },
+  saveBtnText: { color: COLORS.bgPrimary, fontWeight: 'bold' },
+  btnText: { color: COLORS.textPrimary, fontWeight: 'bold' },
 });

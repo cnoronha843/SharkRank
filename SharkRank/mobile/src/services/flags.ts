@@ -16,9 +16,9 @@ export interface FeatureFlags {
 }
 
 const DEFAULT_FLAGS: FeatureFlags = {
-  SHADOW_MODE: true,           // Ativo por padrão na fase beta
+  SHADOW_MODE: false,          // Agora aberto por padrão conforme pedido
   EXTRA_FUNDAMENTOS: false,    // Desativado no MVP
-  SHOW_SURVEY: true,           // Ativo para coleta de calibração
+  SHOW_SURVEY: false,          // Calibração concluída
   DEBUG_MODE: __DEV__,
 };
 

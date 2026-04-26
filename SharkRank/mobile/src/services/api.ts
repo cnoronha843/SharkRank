@@ -1,13 +1,12 @@
 /**
  * SharkRank — API Service
  * Comunicação com o backend FastAPI.
- * Inclui sync queue para offline-first (Decisão #1).
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Pegamos a URL da rede local (se configurado no .env) ou cai no localhost se for web
-const API_BASE = process.env.EXPO_PUBLIC_API_URL || (__DEV__ ? 'http://localhost:8000' : 'https://api.sharkrank.com.br');
+// Hardcoded IP para evitar falhas de carregamento de .env no dispositivo físico
+const API_BASE = 'http://192.168.0.138:8000';
 
 const SYNC_QUEUE_KEY = '@sharkrank:sync_queue';
 
@@ -56,61 +55,15 @@ export const api = {
   getArenaRanking: (arenaId: string) =>
     apiFetch<any>(`/arenas/${arenaId}/ranking`),
 
-  getArenaPlayers: (arenaId: string) =>
-    apiFetch<any>(`/arenas/${arenaId}/players`),
+  getArenaPlayers: (arena_id: string) =>
+    apiFetch<any>(`/arenas/${arena_id}/players`),
 
-  getCalibrationReport: (arenaId: string) =>
-    apiFetch<any>(`/arenas/${arenaId}/calibration-report`),
+  getCalibrationReport: (arena_id: string) =>
+    apiFetch<any>(`/arenas/${arena_id}/calibration-report`),
 
-  submitMatch: (matchData: any) =>
-    apiFetch<any>('/matches', {
-      method: 'POST',
-      body: JSON.stringify(matchData),
-    }),
+  getPlayerStats: (player_id: string) =>
+    apiFetch<any>(`/players/${player_id}/stats`),
 
-  getELOAccuracy: () => apiFetch<any>('/health/elo-accuracy'),
+  getPlayerMatches: (player_id: string) =>
+    apiFetch<any>(`/players/${player_id}/matches`),
 };
-
-// === SYNC QUEUE (Offline-First) ===
-
-export async function addToSyncQueue(request: Omit<QueuedRequest, 'id' | 'createdAt'>): Promise<void> {
-  const queue = await getSyncQueue();
-  queue.push({
-    ...request,
-    id: Date.now().toString(36) + Math.random().toString(36).substr(2, 9),
-    createdAt: new Date().toISOString(),
-  });
-  await AsyncStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(queue));
-}
-
-export async function getSyncQueue(): Promise<QueuedRequest[]> {
-  const raw = await AsyncStorage.getItem(SYNC_QUEUE_KEY);
-  return raw ? JSON.parse(raw) : [];
-}
-
-export async function processSyncQueue(): Promise<{ processed: number; failed: number }> {
-  const queue = await getSyncQueue();
-  let processed = 0;
-  let failed = 0;
-  const remaining: QueuedRequest[] = [];
-
-  for (const item of queue) {
-    try {
-      await apiFetch(item.endpoint, {
-        method: item.method,
-        body: JSON.stringify(item.body),
-      });
-      processed++;
-    } catch (error) {
-      failed++;
-      remaining.push(item);
-    }
-  }
-
-  await AsyncStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(remaining));
-  return { processed, failed };
-}
-
-export async function clearSyncQueue(): Promise<void> {
-  await AsyncStorage.removeItem(SYNC_QUEUE_KEY);
-}

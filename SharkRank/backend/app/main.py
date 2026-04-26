@@ -11,6 +11,14 @@ from uuid import uuid4
 from hashlib import sha256
 from typing import Annotated
 
+import time
+import os
+from .database import init_db, DB_PATH
+import aiosqlite
+import json
+import base64
+import hmac
+
 from fastapi import FastAPI, HTTPException, status, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -32,7 +40,7 @@ import base64
 import json
 import hmac
 
-JWT_SECRET = "sharkrank-dev-secret-change-in-prod"  # ENV var em prod
+JWT_SECRET = os.getenv("JWT_SECRET", "sharkrank-dev-secret-change-in-prod")
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRY_HOURS = 72
 
@@ -91,25 +99,20 @@ async def get_current_arena(
     return verify_jwt(credentials.credentials)
 
 
-# === In-memory stores (substituir por PostgreSQL + Redis em produção) ===
+# === In-memory stores (legado — migrando para SQLite em database.py) ===
 idempotency_store = IdempotencyStore()
-players_db: dict[str, dict] = {}
-matches_db: list[dict] = []
-elo_engine = ELOEngine()
-arenas_db: dict[str, dict] = {}  # {arena_id: {name, pin_hash, ...}}
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Seed de dados para desenvolvimento."""
-    _seed_demo_data()
+    """Inicialização do banco e seed de dados persistentes."""
+    await init_db()
+    await _seed_demo_data_persistent()
     yield
-
 
 app = FastAPI(
     title="SharkRank API",
     description="Motor ELO e telemetria para futevôlei",
-    version="0.2.0",
+    version="1.1.0",
     lifespan=lifespan,
 )
 
@@ -196,88 +199,64 @@ class RevenueCatWebhook(BaseModel):
 # === ENDPOINTS ===
 
 # --- Auth ---
+# --- Auth ---
 @app.post("/auth/login", response_model=ArenaLoginResponse)
 async def arena_login(request: ArenaLoginRequest):
-    """
-    Login por arena via PIN de 4 dígitos.
-    Usado pelo professor para vincular o app à sua arena.
-    """
-    arena = arenas_db.get(request.arena_id)
-    if not arena:
-        raise HTTPException(status_code=404, detail="Arena não encontrada")
+    """Login por arena via PIN de 4 dígitos (Sprint 9: Persistente)."""
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        cursor = await db.execute("SELECT * FROM arenas WHERE id = ?", (request.arena_id,))
+        arena = await cursor.fetchone()
+        
+        if not arena:
+            raise HTTPException(status_code=404, detail="Arena não encontrada")
 
-    pin_hash = sha256(request.pin.encode()).hexdigest()
-    if pin_hash != arena.get("pin_hash"):
-        raise HTTPException(status_code=401, detail="PIN incorreto")
+        pin_hash = sha256(request.pin.encode()).hexdigest()
+        if pin_hash != arena["pin_hash"]:
+            raise HTTPException(status_code=401, detail="PIN incorreto")
 
-    token = create_jwt(request.arena_id, arena["name"])
-    return ArenaLoginResponse(
-        token=token,
-        arena_id=request.arena_id,
-        arena_name=arena["name"],
-    )
-
-
-# --- Webhooks (RevenueCat) ---
-@app.post("/webhooks/revenuecat")
-async def revenuecat_webhook(payload: RevenueCatWebhook):
-    """
-    Recebe eventos de assinatura (INITIAL_PURCHASE, RENEWAL, CANCELLATION)
-    e atualiza o plan_tier da arena.
-    """
-    event_type = payload.event.get("type")
-    arena_id = payload.event.get("app_user_id")
-    entitlements = payload.event.get("entitlement_ids", [])
-    
-    if arena_id in arenas_db:
-        if event_type in ["INITIAL_PURCHASE", "RENEWAL", "UNCANCELLATION"]:
-            if "premium_arena" in entitlements:
-                arenas_db[arena_id]["plan_tier"] = "premium"
-                arenas_db[arena_id]["shadow_mode"] = False  # Premium libera ranking
-        elif event_type in ["CANCELLATION", "EXPIRATION"]:
-            arenas_db[arena_id]["plan_tier"] = "basic"
-            arenas_db[arena_id]["shadow_mode"] = True
-    
-    return {"status": "received"}
+        token = create_jwt(request.arena_id, arena["name"])
+        return ArenaLoginResponse(
+            token=token,
+            arena_id=request.arena_id,
+            arena_name=arena["name"],
+        )
 
 
 # --- Players CRUD ---
 @app.get("/arenas/{arena_id}/players")
 async def list_players(arena_id: str):
-    """Lista todos os jogadores de uma arena."""
-    arena_players = [
-        PlayerSchema(
-            id=pid, name=p["name"], rating=p["rating"],
-            matches_played=p["matches_played"], arena_id=p["arena_id"],
-        )
-        for pid, p in players_db.items()
-        if p["arena_id"] == arena_id and p.get("is_active", True)
-    ]
-    arena_players.sort(key=lambda x: x.name)
-    return {"arena_id": arena_id, "players": arena_players, "total": len(arena_players)}
+    """Lista todos os jogadores de uma arena (Sprint 9: SQLite)."""
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        cursor = await db.execute("""
+            SELECT id, name, rating, matches_played, arena_id 
+            FROM players 
+            WHERE arena_id = ? AND is_active = 1
+            ORDER BY name ASC
+        """, (arena_id,))
+        rows = await cursor.fetchall()
+        players = [dict(row) for row in rows]
+        return {"arena_id": arena_id, "players": players, "total": len(players)}
 
 
 @app.post("/arenas/{arena_id}/players", status_code=status.HTTP_201_CREATED)
 async def create_player(arena_id: str, request: PlayerCreateRequest):
-    """Cadastra novo jogador na arena."""
+    """Cadastra novo jogador na arena (Sprint 9: SQLite)."""
     pid = f"p-{uuid4().hex[:8]}"
-    players_db[pid] = {
-        "name": request.name,
-        "nickname": request.nickname,
-        "position": request.position,
-        "age": request.age,
-        "rating": 1500.0,
-        "matches_played": 0,
-        "wins": 0,
-        "arena_id": arena_id,
-        "is_active": True,
-    }
-    return {"id": pid, "name": request.name, "rating": 1500.0}
+    async with aiosqlite.connect(DB_PATH) as db:
+        await db.execute("""
+            INSERT INTO players (id, name, nickname, position, age, rating, matches_played, wins, arena_id, is_active)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (pid, request.name, request.nickname or request.name.split(' ')[0], 
+              request.position, request.age, 1000.0, 0, 0, arena_id, True))
+        await db.commit()
+    return {"id": pid, "name": request.name, "rating": 1000.0}
 
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "service": "sharkrank-api", "version": "0.1.0"}
+    return {"status": "ok", "service": "sharkrank-api", "version": "1.1.0", "db": "sqlite-async"}
 
 
 @app.get("/health/elo-accuracy")
@@ -372,7 +351,7 @@ async def create_match(request: MatchCreateRequest):
     all_players = request.team_a + request.team_b
     for pid in all_players:
         if pid not in players_db:
-            players_db[pid] = {"rating": 1500.0, "matches_played": 0, "arena_id": request.arena_id, "name": pid}
+            players_db[pid] = {"rating": 1000.0, "matches_played": 0, "arena_id": request.arena_id, "name": pid}
         current_ratings[pid] = players_db[pid]["rating"]
         match_counts[pid] = players_db[pid]["matches_played"]
 
@@ -388,7 +367,7 @@ async def create_match(request: MatchCreateRequest):
     reconciliation = elo_engine.reconcile(request.elo_provisional or current_ratings, new_ratings)
     reconciliation["match_id"] = request.match_id
 
-    # 8. Salvar partida
+    # 8. Salvar partida (Completa com eventos para Analytics da Sprint 7)
     match_record = {
         "match_id": request.match_id,
         "arena_id": request.arena_id,
@@ -396,6 +375,13 @@ async def create_match(request: MatchCreateRequest):
         "team_b": request.team_b,
         "score_a": match.score_a,
         "score_b": match.score_b,
+        "sets": [
+            {
+                "score_a": s.score_a,
+                "score_b": s.score_b,
+                "events": [{"type": e.tipo.value, "player": e.player_id} for e in s.events]
+            } for s in match.sets
+        ],
         "reconciliation": reconciliation,
         "created_at": datetime.now().isoformat(),
     }
@@ -405,6 +391,66 @@ async def create_match(request: MatchCreateRequest):
     idempotency_store.store(request.idempotency_key, reconciliation)
 
     return ReconciliationResponse(**reconciliation)
+
+
+@app.get("/players/{player_id}/stats")
+async def get_player_stats(player_id: str):
+    """
+    Agrega estatísticas detalhadas de um jogador (Sprint 7).
+    Calcula % de acerto por fundamento e win rate.
+    """
+    player = players_db.get(player_id)
+    if not player:
+        raise HTTPException(status_code=404, detail="Jogador não encontrado")
+
+    # Filtra partidas onde o jogador participou
+    p_matches = [
+        m for m in matches_db 
+        if player_id in m["team_a"] or player_id in m["team_b"]
+    ]
+
+    stats = {
+        "total_matches": len(p_matches),
+        "wins": 0,
+        "losses": 0,
+        "fundamentals": {},  # { "coxa": { "points": 5, "errors": 1 }, ... }
+    }
+
+    for m in p_matches:
+        # Vitória/Derrota
+        is_team_a = player_id in m["team_a"]
+        won = (m["score_a"] > m["score_b"]) if is_team_a else (m["score_b"] > m["score_a"])
+        if won: stats["wins"] += 1
+        else: stats["losses"] += 1
+
+        # Fundamentos
+        for s in m.get("sets", []):
+            for e in s.get("events", []):
+                if e["player"] == player_id:
+                    f_key = e["type"]
+                    if f_key not in stats["fundamentals"]:
+                        stats["fundamentals"][f_key] = 0
+                    stats["fundamentals"][f_key] += 1
+
+    return {
+        "player_id": player_id,
+        "name": player["name"],
+        "rating": player["rating"],
+        "stats": stats
+    }
+
+
+@app.get("/players/{player_id}/matches")
+async def get_player_matches(player_id: str):
+    """Retorna as últimas 20 partidas de um jogador."""
+    p_matches = [
+        m for m in matches_db 
+        if player_id in m["team_a"] or player_id in m["team_b"]
+    ]
+    # Ordena por mais recente (simulado pelo índice no banco in-memory)
+    p_matches.reverse()
+    return {"player_id": player_id, "matches": p_matches[:20]}
+
 
 
 @app.get("/arenas/{arena_id}/ranking")
@@ -503,45 +549,36 @@ async def track_event(event: AnalyticsEvent):
     return {"status": "ok"}
 
 
-# === SEED DATA ===
+# === SEED DATA PERSISTENTE (Sprint 5 & Sprint 9) ===
 
-def _seed_demo_data():
-    """Dados iniciais para desenvolvimento — 5 arenas piloto de Blumenau/SC."""
-    # === ARENAS (5 piloto — SaleManager.md) ===
-    pilot_arenas = [
-        ("arena-blumenau-01", "Arena Praia do Moura", "1234"),
-        ("arena-blumenau-02", "CT Futevôlei BNU", "5678"),
-        ("arena-blumenau-03", "Arena Gaspar Beach", "9012"),
-        ("arena-blumenau-04", "Vila do Vôlei", "3456"),
-        ("arena-blumenau-05", "Arena Sand Sports", "7890"),
-    ]
-    for aid, name, pin in pilot_arenas:
-        arenas_db[aid] = {
-            "name": name,
-            "city": "Blumenau",
-            "state": "SC",
-            "pin_hash": sha256(pin.encode()).hexdigest(),
-            "plan_tier": "basic",
-            "shadow_mode": True,
-        }
-
-    # === JOGADORES (arena principal) ===
-    seed = [
-        ("p-carlao", "Carlão", 2100.0, 45),
-        ("p-seu-andre", "Seu Andre", 1850.0, 38),
-        ("p-andrezinho", "Andrezinho", 1650.0, 29),
-        ("p-lucas", "Lucas", 1500.0, 18),
-        ("p-pablo", "Pablo", 1350.0, 15),
-        ("p-crys", "Crys", 1250.0, 10),
-        ("p-candinho", "Candinho", 1100.0, 4),
-    ]
-    for pid, name, rating, matches in seed:
-        players_db[pid] = {
-            "name": name,
-            "rating": rating,
-            "matches_played": matches,
-            "wins": matches // 2,
-            "arena_id": "arena-blumenau-01",
-            "is_active": True,
-        }
+async def _seed_demo_data_persistent():
+    """Injeta arenas e jogadores lendários da Sprint 5 no SQLite."""
+    async with aiosqlite.connect(DB_PATH) as db:
+        cursor = await db.execute("SELECT COUNT(*) FROM arenas")
+        count = await cursor.fetchone()
+        if count[0] == 0:
+            aid = "arena-blumenau-01"
+            await db.execute("""
+                INSERT INTO arenas (id, name, city, state, pin_hash, plan_tier, shadow_mode)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (aid, "Arena Praia do Moura", "Blumenau", "SC", sha256("1234".encode()).hexdigest(), "premium", False))
+            
+            # Seed da Sprint 5 (Os Craques da Areia)
+            seed_players = [
+                ("p-carlao", "Carlão", 2100.0, 45),
+                ("p-seu-andre", "Seu Andre", 1850.0, 38),
+                ("p-andrezinho", "Andrezinho", 1650.0, 29),
+                ("p-lucas", "Lucas", 1500.0, 18),
+                ("p-pablo", "Pablo", 1350.0, 15),
+                ("p-crys", "Crys", 1250.0, 10),
+                ("p-candinho", "Candinho", 1100.0, 4),
+            ]
+            for pid, name, rating, matches in seed_players:
+                await db.execute("""
+                    INSERT INTO players (id, name, nickname, position, rating, matches_played, wins, arena_id, is_active)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (pid, name, name.split(' ')[0], "Atacante", rating, matches, matches // 2, aid, True))
+            
+            await db.commit()
+            print(f"✅ Seed data da Sprint 5 injetado com sucesso ({len(seed_players)} jogadores).")
 

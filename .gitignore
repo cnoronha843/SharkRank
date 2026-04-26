@@ -14,3 +14,4 @@ SharkRank/backend/__pycache__/
 SharkRank/backend/venv/
 SharkRank/backend/.env
 SharkRank/backend/.pytest_cache
+token.txt

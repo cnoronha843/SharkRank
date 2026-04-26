@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Alert, Modal, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FundamentoButton } from '../components/FundamentoButton';
@@ -7,6 +7,8 @@ import { PlayerSelectScreen } from './PlayerSelectScreen';
 import { calculateMatchProvisionalELO } from '../services/elo';
 import { enqueueSync } from '../services/sync';
 import { getFlag } from '../services/flags';
+import { SharkVisionCamera, SharkVisionHandle } from '../components/SharkVisionCamera';
+import * as MediaLibrary from 'expo-media-library';
 import { COLORS, SPACING, BORDER_RADIUS, FUNDAMENTOS } from '../theme';
 
 interface Player {
@@ -21,10 +23,13 @@ interface SelectedTeams {
   teamB: Player[];
 }
 
+import { Video, ResizeMode } from 'expo-av';
+
 interface MatchEvent {
   type: string;
   player: string;
   timestamp: string;
+  videoUri?: string;
 }
 
 interface SetData {
@@ -57,16 +62,30 @@ export function TrackerScreen() {
   const [matchFinished, setMatchFinished] = useState(false);
   const [provisionalELO, setProvisionalELO] = useState<Record<string, number> | null>(null);
   const [showSurvey, setShowSurvey] = useState(false);
+  const [replayUri, setReplayUri] = useState<string | null>(null);
+  const sharkVisionRef = useRef<SharkVisionHandle>(null);
 
   const matchId = useState(() => Date.now().toString(36) + Math.random().toString(36).substr(2, 9))[0];
 
-  const handleActionSelected = (fundamentoKey: string, isError: boolean) => {
+  useEffect(() => {
+    if (isConfigured && !matchFinished) {
+      setTimeout(() => sharkVisionRef.current?.startRecording(), 1000);
+    }
+  }, [isConfigured, matchFinished]);
+
+  const handleActionSelected = async (fundamentoKey: string, isError: boolean) => {
     if (!activePlayerForAction || !selectedTeams) return;
     
+    // Captura o vídeo do ponto que acabou de acontecer
+    const videoUri = await sharkVisionRef.current?.stopRecording();
+    // Inicia a gravação do PRÓXIMO ponto
+    sharkVisionRef.current?.startRecording();
+
     const event: MatchEvent = { 
       type: fundamentoKey, 
       player: activePlayerForAction.id, 
-      timestamp: new Date().toISOString() 
+      timestamp: new Date().toISOString(),
+      videoUri: videoUri || undefined,
     };
     
     setEvents(prev => [...prev, event]);
@@ -280,7 +299,12 @@ export function TrackerScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Placar Realista */}
+      {/* SharkVision AI Overlay (Sprint 8) */}
+      {isConfigured && !matchFinished && (
+        <SharkVisionCamera ref={sharkVisionRef} />
+      )}
+
+      {/* Placar e Sets */}
       <View style={styles.scoreboard}>
         <View style={styles.scoreTeam}>
           <Text style={styles.scoreLabel}>Time A</Text>
@@ -326,6 +350,28 @@ export function TrackerScreen() {
         <Text style={styles.woBtnText}>Encerrar Partida (WO)</Text>
       </TouchableOpacity>
 
+      {/* Histórico de Pontos (Sprint 8) */}
+      <View style={styles.historySection}>
+        <Text style={styles.historyTitle}>Últimos Pontos</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.historyScroll}>
+          {events.slice().reverse().map((item, idx) => {
+            const p = [...selectedTeams.teamA, ...selectedTeams.teamB].find(p => p.id === item.player);
+            const fundamento = FUNDAMENTOS.find(f => f.key === item.type);
+            return (
+              <View key={idx} style={styles.historyCard}>
+                <Text style={styles.historyEmoji}>{fundamento?.emoji}</Text>
+                <Text style={styles.historyName}>{p?.name.split(' ')[0]}</Text>
+                {item.videoUri && (
+                  <TouchableOpacity style={styles.miniReplayBtn} onPress={() => setReplayUri(item.videoUri!)}>
+                    <Text style={styles.miniReplayIcon}>🎥</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            );
+          })}
+        </ScrollView>
+      </View>
+
       {/* Modal de Ações */}
       <Modal visible={!!activePlayerForAction} transparent animationType="slide">
         <View style={styles.modalBg}>
@@ -358,6 +404,29 @@ export function TrackerScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Modal de Replay SharkVision (Sprint 8) */}
+      <Modal visible={!!replayUri} transparent animationType="fade">
+        <View style={styles.replayModalBg}>
+          <View style={styles.replayContainer}>
+            {replayUri && (
+              <Video
+                style={styles.videoPlayer}
+                source={{ uri: replayUri }}
+                useNativeControls
+                resizeMode={ResizeMode.CONTAIN}
+                shouldPlay
+              />
+            )}
+            <TouchableOpacity 
+              style={styles.closeReplayBtn} 
+              onPress={() => setReplayUri(null)}
+            >
+              <Text style={styles.closeReplayText}>FECHAR REPLAY</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -377,6 +446,22 @@ const styles = StyleSheet.create({
   playerBtnText: { color: COLORS.textPrimary, fontSize: 18, fontWeight: 'bold' },
   woBtn: { backgroundColor: 'transparent', borderWidth: 1, borderColor: COLORS.error, margin: 16, padding: 16, borderRadius: BORDER_RADIUS.sm, alignItems: 'center' },
   woBtnText: { color: COLORS.error, fontWeight: 'bold' },
+  
+  historySection: { marginHorizontal: 16, marginBottom: 20 },
+  historyTitle: { color: COLORS.textSecondary, fontSize: 12, fontWeight: 'bold', marginBottom: 10 },
+  historyScroll: { gap: 10 },
+  historyCard: { backgroundColor: COLORS.bgSecondary, padding: 10, borderRadius: 10, alignItems: 'center', minWidth: 80, borderWidth: 1, borderColor: COLORS.border },
+  historyEmoji: { fontSize: 20 },
+  historyName: { color: COLORS.textPrimary, fontSize: 10, fontWeight: 'bold' },
+  miniReplayBtn: { marginTop: 5, backgroundColor: COLORS.accent + '20', padding: 4, borderRadius: 5 },
+  miniReplayIcon: { fontSize: 12 },
+
+  replayModalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', justifyContent: 'center', alignItems: 'center' },
+  replayContainer: { width: '90%', height: '80%', backgroundColor: '#000', borderRadius: 20, overflow: 'hidden' },
+  videoPlayer: { flex: 1 },
+  closeReplayBtn: { padding: 20, alignItems: 'center', backgroundColor: COLORS.bgTertiary },
+  closeReplayText: { color: COLORS.textPrimary, fontWeight: 'bold' },
+
   modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.8)', justifyContent: 'flex-end' },
   modalContent: { backgroundColor: COLORS.bgSecondary, padding: 20, borderTopLeftRadius: 20, borderTopRightRadius: 20 },
   modalTitle: { color: COLORS.textPrimary, fontSize: 20, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
@@ -389,12 +474,9 @@ const styles = StyleSheet.create({
   cancelBtn: { backgroundColor: COLORS.bgTertiary, padding: 15, borderRadius: 10, alignItems: 'center', marginTop: 20 },
   btnText: { color: COLORS.textPrimary, fontWeight: 'bold' },
   configTitle: { color: COLORS.textPrimary, fontSize: 24, fontWeight: 'bold', margin: 20, textAlign: 'center' },
-  configCard: { backgroundColor: COLORS.bgSecondary, margin: 16, padding: 20, borderRadius: BORDER_RADIUS.md },
-  configLabel: { color: COLORS.textSecondary, marginBottom: 10, marginTop: 15 },
+  configCard: { backgroundColor: COLORS.bgSecondary, margin: 16, padding: 20, borderRadius: BORDER_RADIUS.md, gap: 15 },
+  configLabel: { color: COLORS.textSecondary, fontSize: 14, fontWeight: '600' },
   btnRow: { flexDirection: 'row', gap: 10 },
-  configBtn: { flex: 1, backgroundColor: COLORS.bgTertiary, padding: 15, borderRadius: 8, alignItems: 'center', borderWidth: 1, borderColor: COLORS.border },
-  activeBtn: { borderColor: COLORS.accent, backgroundColor: 'rgba(0,212,255,0.1)' },
-  startBtn: { backgroundColor: COLORS.accent, padding: 18, borderRadius: 8, alignItems: 'center', marginTop: 30 },
   startBtnText: { color: COLORS.bgPrimary, fontWeight: 'bold', fontSize: 16 },
   resultContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
   resultEmoji: { fontSize: 64, marginBottom: 10 },

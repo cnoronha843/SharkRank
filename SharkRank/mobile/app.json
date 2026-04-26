@@ -1,38 +1,51 @@
 {
   "expo": {
     "name": "SharkRank",
-    "slug": "sharkrank",
-    "owner": "sharkrank",
+    "slug": "mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#060B18"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.sharkrank.app"
+      "bundleIdentifier": "com.sharkrank.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "O SharkRank precisa da câmera para gravar replays das suas melhores jogadas.",
+        "NSMicrophoneUsageDescription": "O SharkRank precisa do microfone para capturar o áudio ambiente da partida."
+      }
     },
     "android": {
       "package": "com.sharkrank.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#060B18"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
     },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow SharkRank to access your camera",
+          "microphonePermission": "Allow SharkRank to access your microphone",
+          "recordAudioAndroid": true
+        }
+      ],
+      "expo-media-library"
+    ],
     "web": {
       "favicon": "./assets/favicon.png"
-    },
-    "extra": {
-      "eas": {
-        "projectId": "5cdd98a9-a2f9-4ff8-9944-8f9fe6cfe0bd"
-      }
     }
   }
 }

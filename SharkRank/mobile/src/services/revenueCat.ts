@@ -111,12 +111,7 @@ export async function purchasePackage(pack: PurchasesPackage): Promise<CustomerI
 }
 
 export async function checkPremiumStatus(): Promise<boolean> {
-  if (Platform.OS === 'web') return false; // Default para web test
-
-  try {
-    const customerInfo = await Purchases.getCustomerInfo();
-    return typeof customerInfo.entitlements.active[ENTITLEMENT_PREMIUM] !== "undefined";
-  } catch (e) {
-    return false;
-  }
+  // LIBERADO PARA TODOS (Decisão Carlos Noronha)
+  return true;
 }
+

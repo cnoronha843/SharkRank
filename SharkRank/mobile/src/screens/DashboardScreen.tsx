@@ -1,6 +1,6 @@
-﻿/**
- * SharkRank â€” Dashboard Screen
- * VisÃ£o geral: stats, top atleta, ranking rÃ¡pido.
+/**
+ * SharkRank — Dashboard Screen
+ * Visão geral: stats, top atleta, ranking rápido.
  */
 
 import React, { useState, useEffect } from 'react';
@@ -35,7 +35,7 @@ export function DashboardScreen() {
       setPlayers(rankingData.ranking);
       if (reportData) setCalibrationReport(reportData);
     } catch (e) {
-      // Offline â€” mostrar dados locais futuramente
+      // Offline — mostrar dados locais futuramente
     } finally {
       setLoading(false);
     }
@@ -46,7 +46,7 @@ export function DashboardScreen() {
 
   return (
     <SafeAreaView style={styles.container} testID="sr_screen_dashboard">
-      <Text style={styles.greeting}>OlÃ¡! ðŸ</Text>
+      <Text style={styles.greeting}>Olá! 👋</Text>
       <Text style={styles.subtitle}>Painel de telemetria SharkRank</Text>
 
       {/* Stats */}
@@ -59,7 +59,7 @@ export function DashboardScreen() {
           <Text style={styles.statValue}>
             {players.length ? Math.round(players.reduce((s, p) => s + p.rating, 0) / players.length) : 0}
           </Text>
-          <Text style={styles.statLabel}>RATING MÃ‰DIO</Text>
+          <Text style={styles.statLabel}>RATING MÉDIO</Text>
         </View>
         <View style={styles.statCard}>
           <Text style={styles.statValue}>
@@ -75,7 +75,7 @@ export function DashboardScreen() {
           <Text style={styles.topEmoji}>{topTier.emoji}</Text>
           <View style={{ flex: 1 }}>
             <Text style={styles.topName}>{top.name}</Text>
-            <Text style={[styles.topTier, { color: topTier.color }]}>{topTier.name} Â· {top.rating}</Text>
+            <Text style={[styles.topTier, { color: topTier.color }]}>{topTier.name} · {top.rating}</Text>
           </View>
           <Text style={styles.topRating}>#1</Text>
         </View>
@@ -84,14 +84,14 @@ export function DashboardScreen() {
       {/* Shadow Mode - Painel do Professor */}
       {getFlag('SHADOW_MODE') && calibrationReport && (
         <View style={styles.calibrationCard}>
-          <Text style={styles.calibrationTitle}>ðŸ”¬ Status da CalibraÃ§Ã£o (Beta)</Text>
+          <Text style={styles.calibrationTitle}>🔬 Status da Calibração (Beta)</Text>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
             <View>
-              <Text style={styles.calibrationLabel}>PrecisÃ£o</Text>
+              <Text style={styles.calibrationLabel}>Precisão</Text>
               <Text style={styles.calibrationValue}>{calibrationReport.avg_accuracy_score} / 5.0</Text>
             </View>
             <View>
-              <Text style={styles.calibrationLabel}>AdoÃ§Ã£o</Text>
+              <Text style={styles.calibrationLabel}>Adoção</Text>
               <Text style={styles.calibrationValue}>{calibrationReport.would_use_pct}%</Text>
             </View>
             <View>
@@ -105,7 +105,7 @@ export function DashboardScreen() {
       )}
 
       {/* Quick Ranking */}
-      <Text style={styles.sectionTitle}>ðŸ† Ranking</Text>
+      <Text style={styles.sectionTitle}>🏆 Ranking</Text>
       {loading ? (
         <ActivityIndicator color={COLORS.accent} size="large" style={{ marginTop: 32 }} />
       ) : (
@@ -179,4 +179,3 @@ const styles = StyleSheet.create({
   calibrationLabel: { fontSize: 11, color: COLORS.textSecondary, marginTop: 8 },
   calibrationValue: { fontSize: 16, fontWeight: '800', color: COLORS.textPrimary },
 });
-

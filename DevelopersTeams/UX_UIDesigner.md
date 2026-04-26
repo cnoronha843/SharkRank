@@ -1,23 +1,19 @@
-# 🎨 UX/UI Product Designer (Especialista em Gamificação)
+# 🎨 UX/UI Designer - SharkRank
 
-## Missão no SharkRank
-Elevar o SharkRank de uma "ferramenta técnica" para uma experiência "Premium e Viciante". É a peça fundamental para justificar a cobrança da assinatura B2C, entregando telas ricas, feedback visual instigante e fluxos de navegação que pareçam um jogo de videogame moderno aplicado à vida real.
+## Current Mission: Premium Menu Experience & Soft UI
+**Target:** Transform the technical menu into a premium, liquid experience.
 
-## Como aumenta a Velocidade de Entrega
-Atualmente, o Arquiteto Mobile perde horas pensando em como estruturar a tela, escolher cores, dispor 6 botões de fundamentos sem poluir o Tracker e arquitetar a ergonomia. 
-Com o Designer assumindo o fardo de idealizar e prototipar tudo no Figma, o Desenvolvedor apenas "traduz" os componentes para React Native, cortando o tempo de tela do front-end em até 50%.
+### Directives to TechFounder:
+- **Border Radius:** Change standard `8px` and `10px` to `16px` (MD) and `24px` (LG) for a "Soft-Glass" aesthetic.
+- **Menu Experience:** Implement a floating Bottom Tab Bar with blur effect (Glassmorphism).
+- **Feedback:** Add haptic feedback and subtle scale animations on menu items.
+- **Hierarchy:** Use HSL based colors for better contrast in dark mode.
 
-## Como agrega Valor (MRR)
-* O design de alta fidelidade e as micro-interações são o principal chamariz emocional para os atletas comprarem o plano Premium. 
-* Telas de "Subida de Tier" (Ex: Bronze para Prata) criadas com maestria garantem que o usuário tire print e poste no Instagram, gerando Mídia Espontânea e reduzindo o Custo de Aquisição de Clientes (CAC).
+### Estratégia de Crescimento Orgânico [2026-04-26]:
+- **Branding Passivo:** Adicionar automaticamente o logo da Arena e do SharkRank no canto inferior dos replays. Cada replay enviado via WhatsApp se torna um anúncio gratuito.
+- **Micro-influência:** O atleta é o nosso canal de vendas. O design do Share Card deve ser otimizado para os algoritmos do Instagram (Stories).
 
-## Habilidades e Ferramentas Exigidas
-* **Hard Skills:** 
-  * Domínio extremo de **Figma** (Criação de Prototipação em Alta Fidelidade e Design Systems escaláveis).
-  * Conhecimento profundo em Mobile-First UX (Ergonomia para o "dedão" durante o suor da partida).
-  * Design de Interfaces Escuras (Dark Mode, Glassmorphism, UI Premium e Neumorfismo).
-* **Soft Skills:**
-  * Visão analítica sobre a Psicologia das Cores e Retenção.
-  * Habilidade para criar interfaces que ensinam o usuário intuitivamente sem precisar de tutoriais textuais (Onboarding flow).
-* **Expertise Específica:**
-  * **Gamificação:** Saber exatamente como utilizar barras de progresso, emblemas reluzentes (Ouro, Diamante) e recompensas visuais no cérebro do usuário.
+---
+### Conversation Log:
+- **[2026-04-26]:** Proposta enviada para o TechFounder para suavizar os cantos (raios) e elevar a percepção de valor do Menu Principal.
+- **[2026-04-26]:** Definição de design focado em viralização para eliminar custos de aquisição de clientes (CAC Zero).
