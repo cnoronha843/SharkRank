@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: sharkrank-api
+    env: docker
+    region: ohio # Ou outra região de sua preferência
+    plan: free
+    rootDir: SharkRank/backend
+    dockerContext: .
+    dockerfilePath: Dockerfile
+    envVars:
+      - key: JWT_SECRET
+        sync: false # Você define o valor no painel do Render
+      - key: PYTHONUNBUFFERED
+        value: "1"
