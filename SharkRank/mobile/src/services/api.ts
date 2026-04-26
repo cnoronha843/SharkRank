@@ -58,6 +58,12 @@ export const api = {
   getArenaPlayers: (arena_id: string) =>
     apiFetch<any>(`/arenas/${arena_id}/players`),
 
+  createPlayer: (arenaId: string, data: { name: string; nickname?: string; position?: string; age?: number }) =>
+    apiFetch<any>(`/arenas/${arenaId}/players`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
   getCalibrationReport: (arena_id: string) =>
     apiFetch<any>(`/arenas/${arena_id}/calibration-report`),
 

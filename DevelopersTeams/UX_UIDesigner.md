@@ -17,3 +17,5 @@
 ### Conversation Log:
 - **[2026-04-26]:** Proposta enviada para o TechFounder para suavizar os cantos (raios) e elevar a percepção de valor do Menu Principal.
 - **[2026-04-26]:** Definição de design focado em viralização para eliminar custos de aquisição de clientes (CAC Zero).
+
+- **[2026-04-26]:** Glassmorphism adicionado ao Bottom Menu com Ionicons (Cybersports vibe). Nova aba SharkVision implementada.

@@ -62,7 +62,7 @@ export function PlayerSelectScreen({ arenaId, onTeamsSelected, onCancel }: Props
     if (!newPlayerName.trim()) return;
     setSaving(true);
     try {
-      await api.apiFetch(`/arenas/${arenaId}/players`, 'POST', {
+      await api.createPlayer(arenaId, {
         name: newPlayerName,
         nickname: newPlayerName.split(' ')[0],
         position: 'Atacante',

@@ -603,5 +603,5 @@ async def _seed_demo_data_persistent():
                 """, (pid, name, name.split(' ')[0], "Atacante", rating, matches, matches // 2, aid, True))
             
             await db.commit()
-            print(f"✅ Seed data da Sprint 5 injetado com sucesso ({len(seed_players)} jogadores).")
+            print(f"[OK] Seed data da Sprint 5 injetado com sucesso ({len(seed_players)} jogadores).")
 

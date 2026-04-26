@@ -56,3 +56,12 @@
 * **Monetização:** Integração SDK RevenueCat (react-native-purchases).
 * **Performance:** Otimização de renderização (React.memo, re-renders) para a tela de Tracker.
 * **Navegação:** React Navigation (Bottom Tabs, Modais rápidos).
+
+## 6. Antipatterns Conhecidos (Bug Tracking)
+> **[BUG HISTÓRICO — Clipping de FabButton]:** Nunca utilizar overflow: 'hidden' em containers pai (como a 	abBarStyle do Bottom Navigation) se houver elementos filhos desenhados para vazar o limite do container (como um Botão Central flutuante). O overflow irá cortar o componente visualmente pela metade (guilhotina). 
+> **Solução Correta:** Aplicar o orderRadius e overflow no container interno de Background (ex: BlurView com StyleSheet.absoluteFillObject) e manter o container pai flexível.
+
+> **[BUG HISTORICO -- Cadastro de Atletas Impossivel]:** A tela PlayerSelectScreen.tsx chamava pi.apiFetch(...) que era uma funcao PRIVADA do modulo pi.ts, nunca exposta no objeto publico pi. Resultado: o botao 'Cadastrar' falhava silenciosamente. 
+> **Causa Raiz:** Falta do metodo createPlayer no objeto pi exportado.
+> **Correcao:** Expor createPlayer como metodo publico em pi.ts e ajustar a chamada em PlayerSelectScreen.tsx.
+> **Regra:** NUNCA chamar funcoes internas de modulos de servico diretamente. Sempre usar os metodos expostos no objeto publico.

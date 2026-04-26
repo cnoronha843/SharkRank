@@ -104,34 +104,42 @@ export function DashboardScreen() {
         </View>
       )}
 
-      {/* Quick Ranking */}
-      <Text style={styles.sectionTitle}>🏆 Ranking</Text>
-      {loading ? (
-        <ActivityIndicator color={COLORS.accent} size="large" style={{ marginTop: 32 }} />
-      ) : (
-        <FlatList
-          data={players}
-          keyExtractor={item => item.id}
-          renderItem={({ item, index }) => {
-            const tier = getTier(item.rating);
-            return (
-              <View style={styles.rankRow}>
-                <View style={[styles.rankPos, index < 3 && { backgroundColor: tier.color }]}>
-                  <Text style={[styles.rankPosText, index < 3 && { color: COLORS.bgPrimary }]}>{index + 1}</Text>
-                </View>
-                <View style={{ flex: 1, marginLeft: 12 }}>
-                  <Text style={styles.rankName}>{item.name}</Text>
-                  <Text style={styles.rankMeta}>{item.matches_played} partidas</Text>
-                </View>
-                <View style={{ alignItems: 'flex-end' }}>
-                  <Text style={[styles.rankRating, { color: tier.color }]}>{item.rating}</Text>
-                  <Text style={[styles.rankTierBadge, { color: tier.color }]}>{tier.emoji} {tier.name}</Text>
-                </View>
-              </View>
-            );
-          }}
-        />
-      )}
+      {/* Quick Actions */}
+      <Text style={styles.sectionTitle}>Ações Rápidas</Text>
+      <View style={styles.actionsRow}>
+        <View style={styles.actionCard}>
+          <Text style={{ fontSize: 28 }}>⚡</Text>
+          <Text style={styles.actionText}>Nova Partida</Text>
+        </View>
+        <View style={styles.actionCard}>
+          <Text style={{ fontSize: 28 }}>👥</Text>
+          <Text style={styles.actionText}>Novo Atleta</Text>
+        </View>
+        <View style={styles.actionCard}>
+          <Text style={{ fontSize: 28 }}>🏟️</Text>
+          <Text style={styles.actionText}>Quadras</Text>
+        </View>
+      </View>
+
+      {/* Recent Matches (Mock) */}
+      <Text style={styles.sectionTitle}>Últimas Partidas</Text>
+      <View style={styles.recentMatchCard}>
+        <View style={styles.matchHeader}>
+          <Text style={styles.matchStatus}>Ao Vivo</Text>
+          <Text style={styles.matchTime}>Quadra 1</Text>
+        </View>
+        <View style={styles.matchScoreboard}>
+          <View style={styles.teamInfo}>
+            <Text style={styles.teamName}>Rafa & Gui</Text>
+            <Text style={styles.teamScore}>14</Text>
+          </View>
+          <Text style={styles.vs}>X</Text>
+          <View style={styles.teamInfo}>
+            <Text style={styles.teamScore}>12</Text>
+            <Text style={styles.teamName}>Carlão & Lucas</Text>
+          </View>
+        </View>
+      </View>
     </SafeAreaView>
   );
 }
@@ -156,21 +164,25 @@ const styles = StyleSheet.create({
   topName: { fontSize: 16, fontWeight: '700', color: COLORS.textPrimary },
   topTier: { fontSize: 12, fontWeight: '600', marginTop: 2 },
   topRating: { fontSize: 28, fontWeight: '800', color: COLORS.accent },
-  sectionTitle: { fontSize: 18, fontWeight: '700', color: COLORS.textPrimary, marginBottom: SPACING.md },
-  rankRow: {
-    flexDirection: 'row', alignItems: 'center', padding: SPACING.md,
-    backgroundColor: COLORS.bgCard, borderRadius: BORDER_RADIUS.sm,
-    borderWidth: 1, borderColor: COLORS.border, marginBottom: SPACING.sm,
+  sectionTitle: { fontSize: 18, fontWeight: '700', color: COLORS.textPrimary, marginBottom: SPACING.sm, marginTop: SPACING.md },
+  actionsRow: { flexDirection: 'row', gap: SPACING.sm, marginBottom: SPACING.lg },
+  actionCard: {
+    flex: 1, backgroundColor: COLORS.bgCard, borderRadius: 16, padding: SPACING.md,
+    alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)',
   },
-  rankPos: {
-    width: 30, height: 30, borderRadius: 15, backgroundColor: COLORS.bgTertiary,
-    justifyContent: 'center', alignItems: 'center',
+  actionText: { fontSize: 12, fontWeight: '600', color: COLORS.textPrimary, marginTop: 8 },
+  recentMatchCard: {
+    backgroundColor: COLORS.bgCard, borderRadius: 16, padding: SPACING.md,
+    borderWidth: 1, borderColor: 'rgba(0, 212, 255, 0.3)',
   },
-  rankPosText: { fontSize: 13, fontWeight: '800', color: COLORS.textSecondary },
-  rankName: { fontSize: 14, fontWeight: '600', color: COLORS.textPrimary },
-  rankMeta: { fontSize: 11, color: COLORS.textMuted, marginTop: 2 },
-  rankRating: { fontSize: 20, fontWeight: '800' },
-  rankTierBadge: { fontSize: 10, fontWeight: '600', marginTop: 2 },
+  matchHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
+  matchStatus: { fontSize: 12, fontWeight: '800', color: '#FF3B30' }, // Red for live
+  matchTime: { fontSize: 12, color: COLORS.textMuted },
+  matchScoreboard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  teamInfo: { flex: 1, alignItems: 'center' },
+  teamName: { fontSize: 14, fontWeight: '600', color: COLORS.textPrimary, marginBottom: 4 },
+  teamScore: { fontSize: 28, fontWeight: '800', color: COLORS.textPrimary },
+  vs: { fontSize: 16, fontWeight: '800', color: COLORS.textMuted, marginHorizontal: 16 },
   calibrationCard: {
     backgroundColor: 'rgba(0, 212, 255, 0.05)', borderRadius: BORDER_RADIUS.sm,
     borderWidth: 1, borderColor: COLORS.accent, padding: SPACING.md, marginBottom: SPACING.lg,

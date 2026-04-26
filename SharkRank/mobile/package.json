@@ -9,16 +9,19 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@expo/vector-icons": "^15.0.3",
     "@nozbe/watermelondb": "^0.28.0",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-navigation/bottom-tabs": "^7.15.10",
     "@react-navigation/native": "^7.2.2",
     "expo": "~54.0.33",
     "expo-av": "~16.0.8",
+    "expo-blur": "~15.0.8",
     "expo-camera": "~17.0.10",
     "expo-constants": "~18.0.13",
     "expo-file-system": "~19.0.21",
     "expo-haptics": "~15.0.8",
+    "expo-linear-gradient": "~15.0.8",
     "expo-media-library": "~18.2.1",
     "expo-sharing": "~14.0.8",
     "expo-status-bar": "~3.0.9",
@@ -35,8 +38,14 @@
   },
   "devDependencies": {
     "@babel/plugin-proposal-decorators": "^7.29.0",
+    "@testing-library/react-native": "^13.3.3",
     "@types/react": "~19.1.0",
     "babel-preset-expo": "^55.0.18",
+    "jest": "^30.3.0",
+    "jest-expo": "^55.0.16",
+    "react-native-worklets": "^0.8.1",
+    "react-native-worklets-core": "^1.6.3",
+    "react-test-renderer": "^19.1.0",
     "typescript": "~5.9.2"
   },
   "private": true
