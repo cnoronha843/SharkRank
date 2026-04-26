@@ -61,17 +61,17 @@ class TestELOEngine:
                 SetResult(
                     score_a=18, score_b=15,
                     events=[
-                        Evento(Fundamento.SAQUE_ACE, "player-1", "2026-04-25T10:00:00Z"),
-                        Evento(Fundamento.ATAQUE_VENCEDOR, "player-2", "2026-04-25T10:01:00Z"),
-                        Evento(Fundamento.RECEPCAO_PERFEITA, "player-1", "2026-04-25T10:02:00Z"),
-                        Evento(Fundamento.ERRO_NAO_FORCADO, "player-3", "2026-04-25T10:03:00Z"),
+                        Evento(Fundamento.SHARK_ATAQUE, "player-1", "2026-04-25T10:00:00Z"),
+                        Evento(Fundamento.SHARK_ATAQUE, "player-2", "2026-04-25T10:01:00Z"),
+                        Evento(Fundamento.PEITO, "player-1", "2026-04-25T10:02:00Z"),
+                        Evento(Fundamento.ERRO_RECEPCAO, "player-3", "2026-04-25T10:03:00Z"),
                     ],
                 ),
                 SetResult(
                     score_a=18, score_b=12,
                     events=[
-                        Evento(Fundamento.ATAQUE_VENCEDOR, "player-1", "2026-04-25T10:20:00Z"),
-                        Evento(Fundamento.SAQUE_ACE, "player-2", "2026-04-25T10:21:00Z"),
+                        Evento(Fundamento.SHARK_ATAQUE, "player-1", "2026-04-25T10:20:00Z"),
+                        Evento(Fundamento.SHARK_ATAQUE, "player-2", "2026-04-25T10:21:00Z"),
                     ],
                 ),
             ],

@@ -9,9 +9,18 @@ from fastapi.testclient import TestClient
 from app.main import app
 
 
+import os
+from app.database import DB_PATH
+
+@pytest.fixture(autouse=True)
+def clean_db():
+    if os.path.exists(DB_PATH):
+        os.remove(DB_PATH)
+
 @pytest.fixture
 def client():
-    return TestClient(app)
+    with TestClient(app) as test_client:
+        yield test_client
 
 
 class TestHealthEndpoints:
@@ -48,8 +57,8 @@ class TestMatchEndpoint:
             "sets": [{
                 "score_a": 18, "score_b": 12,
                 "events": [
-                    {"type": "saque_ace", "player": "p-rafael", "timestamp": "2026-04-25T10:00:00Z"},
-                    {"type": "ataque_vencedor", "player": "p-mateus", "timestamp": "2026-04-25T10:01:00Z"},
+                    {"type": "shark_ataque", "player": "p-rafael", "timestamp": "2026-04-25T10:00:00Z"},
+                    {"type": "shark_ataque", "player": "p-mateus", "timestamp": "2026-04-25T10:01:00Z"},
                 ]
             }],
             "elo_provisional": {"p-rafael": 1625, "p-mateus": 1560, "p-lucas": 1575, "p-pedro": 1515},
