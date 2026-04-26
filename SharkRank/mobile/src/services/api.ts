@@ -6,7 +6,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Hardcoded IP para evitar falhas de carregamento de .env no dispositivo físico
-const API_BASE = 'https://sharkrank.onrender.com';
+const API_BASE = 'https://sharkrank-api.onrender.com';
 
 const SYNC_QUEUE_KEY = '@sharkrank:sync_queue';
 
