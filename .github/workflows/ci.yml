@@ -80,7 +80,7 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: SharkRank/mobile/package-lock.json
-      - run: npm ci
+      - run: npm install --legacy-peer-deps
       - run: npx expo lint || true  # Non-blocking no MVP
 
   # === SECURITY (DevSecOps — QAEngineer.md) ===
