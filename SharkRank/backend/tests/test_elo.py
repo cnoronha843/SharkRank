@@ -7,8 +7,9 @@ Validações conforme PRD v2.0 e QAEngineer.md:
 - Reconciliação com regra de notificação (|delta| > 3)
 """
 
-import pytest
 import random
+
+import pytest
 
 from app.engine.elo import (
     ELOEngine,
@@ -21,8 +22,8 @@ from app.engine.elo import (
     get_k_factor,
 )
 
-
 # === K-FACTOR ===
+
 
 class TestKFactor:
     def test_acceleration_phase(self):
@@ -44,6 +45,7 @@ class TestKFactor:
 
 # === MOTOR ELO COMPLETO ===
 
+
 class TestELOEngine:
     @pytest.fixture
     def engine(self) -> ELOEngine:
@@ -59,7 +61,8 @@ class TestELOEngine:
             team_b=["player-3", "player-4"],
             sets=[
                 SetResult(
-                    score_a=18, score_b=15,
+                    score_a=18,
+                    score_b=15,
                     events=[
                         Evento(Fundamento.SHARK_ATAQUE, "player-1", "2026-04-25T10:00:00Z"),
                         Evento(Fundamento.SHARK_ATAQUE, "player-2", "2026-04-25T10:01:00Z"),
@@ -68,7 +71,8 @@ class TestELOEngine:
                     ],
                 ),
                 SetResult(
-                    score_a=18, score_b=12,
+                    score_a=18,
+                    score_b=12,
                     events=[
                         Evento(Fundamento.SHARK_ATAQUE, "player-1", "2026-04-25T10:20:00Z"),
                         Evento(Fundamento.SHARK_ATAQUE, "player-2", "2026-04-25T10:21:00Z"),
@@ -138,6 +142,7 @@ class TestELOEngine:
 
 # === CONTRATO ELO: SIMPLIFICADO vs. COMPLETO ===
 
+
 class TestELOContract:
     """
     Teste de contrato matemático (QAEngineer.md, Decisão #1):
@@ -158,8 +163,12 @@ class TestELOContract:
             won_a = random.choice([True, False])
 
             ratings = {"p1": float(r1), "p2": float(r2), "p3": float(r3), "p4": float(r4)}
-            counts = {"p1": random.randint(1, 50), "p2": random.randint(1, 50),
-                       "p3": random.randint(1, 50), "p4": random.randint(1, 50)}
+            counts = {
+                "p1": random.randint(1, 50),
+                "p2": random.randint(1, 50),
+                "p3": random.randint(1, 50),
+                "p4": random.randint(1, 50),
+            }
 
             events = []
             for _ in range(random.randint(2, 8)):
@@ -186,7 +195,9 @@ class TestELOContract:
                 is_a = pid in ["p1", "p2"]
                 k = get_k_factor(counts[pid])
                 opp_avg = avg_b if is_a else avg_a
-                simplified = ELOSimplified.calculate(ratings[pid], opp_avg, won_a if is_a else not won_a, k)
+                simplified = ELOSimplified.calculate(
+                    ratings[pid], opp_avg, won_a if is_a else not won_a, k
+                )
                 delta = abs(full[pid] - simplified)
                 if delta <= 5.0:
                     within_tolerance += 1
@@ -196,6 +207,7 @@ class TestELOContract:
 
 
 # === RECONCILIAÇÃO ===
+
 
 class TestReconciliation:
     def test_no_notification_for_small_delta(self):
@@ -220,6 +232,7 @@ class TestReconciliation:
 
 # === IDEMPOTÊNCIA ===
 
+
 class TestIdempotency:
     def test_duplicate_detection(self):
         store = IdempotencyStore()
@@ -234,6 +247,7 @@ class TestIdempotency:
 
 
 # === ELO CONFIG ===
+
 
 class TestELOConfig:
     def test_config_generation(self):

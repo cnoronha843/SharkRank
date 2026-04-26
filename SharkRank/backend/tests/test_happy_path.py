@@ -15,12 +15,13 @@ Simula o fluxo COMPLETO de um professor chegando na arena:
 Diretriz: QAEngineer.md — Toda feature entregue DEVE ter teste automatizado.
 """
 
-import pytest
-from fastapi.testclient import TestClient
 import os
 
-from app.main import app
+import pytest
+from fastapi.testclient import TestClient
+
 from app.database import DB_PATH
+from app.main import app
 
 
 @pytest.fixture(autouse=True)
@@ -84,21 +85,47 @@ class TestHappyPath:
             "team_b": [players["Lucas"], players["Pedrão"]],
             "sets": [
                 {
-                    "score_a": 18, "score_b": 12,
+                    "score_a": 18,
+                    "score_b": 12,
                     "events": [
-                        {"type": "shark_ataque", "player": players["Rafa"], "timestamp": "2026-04-26T14:00:00Z"},
-                        {"type": "shark_ataque", "player": players["Rafa"], "timestamp": "2026-04-26T14:01:00Z"},
-                        {"type": "peito", "player": players["Mateus"], "timestamp": "2026-04-26T14:02:00Z"},
-                        {"type": "erro_recepcao", "player": players["Lucas"], "timestamp": "2026-04-26T14:03:00Z"},
-                    ]
+                        {
+                            "type": "shark_ataque",
+                            "player": players["Rafa"],
+                            "timestamp": "2026-04-26T14:00:00Z",
+                        },
+                        {
+                            "type": "shark_ataque",
+                            "player": players["Rafa"],
+                            "timestamp": "2026-04-26T14:01:00Z",
+                        },
+                        {
+                            "type": "peito",
+                            "player": players["Mateus"],
+                            "timestamp": "2026-04-26T14:02:00Z",
+                        },
+                        {
+                            "type": "erro_recepcao",
+                            "player": players["Lucas"],
+                            "timestamp": "2026-04-26T14:03:00Z",
+                        },
+                    ],
                 },
                 {
-                    "score_a": 18, "score_b": 15,
+                    "score_a": 18,
+                    "score_b": 15,
                     "events": [
-                        {"type": "shark_ataque", "player": players["Rafa"], "timestamp": "2026-04-26T14:20:00Z"},
-                        {"type": "peito", "player": players["Mateus"], "timestamp": "2026-04-26T14:21:00Z"},
-                    ]
-                }
+                        {
+                            "type": "shark_ataque",
+                            "player": players["Rafa"],
+                            "timestamp": "2026-04-26T14:20:00Z",
+                        },
+                        {
+                            "type": "peito",
+                            "player": players["Mateus"],
+                            "timestamp": "2026-04-26T14:21:00Z",
+                        },
+                    ],
+                },
             ],
             "elo_provisional": {
                 players["Rafa"]: 1020,
@@ -152,8 +179,9 @@ class TestHappyPath:
         assert stats["rating"] > 1000, "Rating do Rafa deveria ter subido"
         assert stats["stats"]["total_matches"] == 1
         # Rafa fez 3 shark_ataques nos 2 sets
-        assert stats["stats"]["fundamentals"].get("shark_ataque", 0) == 3, \
+        assert stats["stats"]["fundamentals"].get("shark_ataque", 0) == 3, (
             f"Rafa deveria ter 3 shark_ataques, mas tem {stats['stats']['fundamentals']}"
+        )
 
         # ============================================================
         # FASE 5: Consultar HISTÓRICO de partidas do Mateus
@@ -175,18 +203,32 @@ class TestHappyPath:
             "team_b": [players["Rafa"], players["Mateus"]],
             "sets": [
                 {
-                    "score_a": 18, "score_b": 16,
+                    "score_a": 18,
+                    "score_b": 16,
                     "events": [
-                        {"type": "shark_ataque", "player": players["Lucas"], "timestamp": "2026-04-26T15:00:00Z"},
-                        {"type": "shark_ataque", "player": players["Pedrão"], "timestamp": "2026-04-26T15:01:00Z"},
-                    ]
+                        {
+                            "type": "shark_ataque",
+                            "player": players["Lucas"],
+                            "timestamp": "2026-04-26T15:00:00Z",
+                        },
+                        {
+                            "type": "shark_ataque",
+                            "player": players["Pedrão"],
+                            "timestamp": "2026-04-26T15:01:00Z",
+                        },
+                    ],
                 },
                 {
-                    "score_a": 18, "score_b": 14,
+                    "score_a": 18,
+                    "score_b": 14,
                     "events": [
-                        {"type": "peito", "player": players["Pedrão"], "timestamp": "2026-04-26T15:20:00Z"},
-                    ]
-                }
+                        {
+                            "type": "peito",
+                            "player": players["Pedrão"],
+                            "timestamp": "2026-04-26T15:20:00Z",
+                        },
+                    ],
+                },
             ],
             "elo_provisional": {
                 players["Lucas"]: 1010,
@@ -239,5 +281,7 @@ class TestHappyPath:
 
         print("\n[SHARK] HAPPY PATH COMPLETO -- Todas as fases passaram!")
         print(f"   Jogadores criados: {len(players)}")
-        print(f"   Partidas jogadas: 2")
-        print(f"   Ranking final: {[p['name'] + ' (' + str(p['rating']) + ')' for p in ranking_v2]}")
+        print("   Partidas jogadas: 2")
+        print(
+            f"   Ranking final: {[p['name'] + ' (' + str(p['rating']) + ')' for p in ranking_v2]}"
+        )

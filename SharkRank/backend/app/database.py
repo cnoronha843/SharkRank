@@ -1,8 +1,7 @@
 import aiosqlite
-import json
-import os
 
 DB_PATH = "sharkrank.db"
+
 
 async def init_db():
     async with aiosqlite.connect(DB_PATH) as db:
@@ -18,7 +17,7 @@ async def init_db():
                 shadow_mode BOOLEAN
             )
         """)
-        
+
         # Tabela de Jogadores
         await db.execute("""
             CREATE TABLE IF NOT EXISTS players (
@@ -35,7 +34,7 @@ async def init_db():
                 FOREIGN KEY (arena_id) REFERENCES arenas (id)
             )
         """)
-        
+
         # Tabela de Partidas
         await db.execute("""
             CREATE TABLE IF NOT EXISTS matches (
@@ -50,8 +49,9 @@ async def init_db():
                 FOREIGN KEY (arena_id) REFERENCES arenas (id)
             )
         """)
-        
+
         await db.commit()
+
 
 async def get_db():
     return await aiosqlite.connect(DB_PATH)

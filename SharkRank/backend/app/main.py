@@ -5,23 +5,20 @@ API de Telemetria e Motor ELO para Futevôlei
 
 from __future__ import annotations
 
-from contextlib import asynccontextmanager
-from datetime import datetime, timedelta
-from uuid import uuid4
-from hashlib import sha256
-from typing import Annotated
-
-import time
-import os
-from .database import init_db, DB_PATH
-import aiosqlite
-import json
 import base64
 import hmac
+import json
+import os
+from contextlib import asynccontextmanager
+from datetime import datetime, timedelta
+from hashlib import sha256
+from typing import Annotated
+from uuid import uuid4
 
-from fastapi import FastAPI, HTTPException, status, Depends, Header
+import aiosqlite
+from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
 
 from app.engine.elo import (
@@ -32,13 +29,11 @@ from app.engine.elo import (
     IdempotencyStore,
     MatchResult,
     SetResult,
-    get_k_factor,
 )
 
+from .database import DB_PATH, init_db
+
 # === JWT minimal (sem dependência externa — produção usará python-jose) ===
-import base64
-import json
-import hmac
 
 JWT_SECRET = os.getenv("JWT_SECRET", "sharkrank-dev-secret-change-in-prod")
 JWT_ALGORITHM = "HS256"
@@ -56,14 +51,18 @@ def _b64decode(data: str) -> bytes:
 
 def create_jwt(arena_id: str, arena_name: str) -> str:
     header = _b64encode(json.dumps({"alg": "HS256", "typ": "JWT"}).encode())
-    payload = _b64encode(json.dumps({
-        "arena_id": arena_id,
-        "arena_name": arena_name,
-        "exp": (datetime.utcnow() + timedelta(hours=JWT_EXPIRY_HOURS)).isoformat(),
-    }).encode())
-    signature = _b64encode(hmac.new(
-        JWT_SECRET.encode(), f"{header}.{payload}".encode(), "sha256"
-    ).digest())
+    payload = _b64encode(
+        json.dumps(
+            {
+                "arena_id": arena_id,
+                "arena_name": arena_name,
+                "exp": (datetime.utcnow() + timedelta(hours=JWT_EXPIRY_HOURS)).isoformat(),
+            }
+        ).encode()
+    )
+    signature = _b64encode(
+        hmac.new(JWT_SECRET.encode(), f"{header}.{payload}".encode(), "sha256").digest()
+    )
     return f"{header}.{payload}.{signature}"
 
 
@@ -73,9 +72,9 @@ def verify_jwt(token: str) -> dict:
         if len(parts) != 3:
             raise ValueError("Invalid token")
         header, payload, signature = parts
-        expected_sig = _b64encode(hmac.new(
-            JWT_SECRET.encode(), f"{header}.{payload}".encode(), "sha256"
-        ).digest())
+        expected_sig = _b64encode(
+            hmac.new(JWT_SECRET.encode(), f"{header}.{payload}".encode(), "sha256").digest()
+        )
         if not hmac.compare_digest(signature, expected_sig):
             raise ValueError("Invalid signature")
         data = json.loads(_b64decode(payload))
@@ -103,12 +102,14 @@ async def get_current_arena(
 idempotency_store = IdempotencyStore()
 elo_engine = ELOEngine()
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Inicialização do banco e seed de dados persistentes."""
     await init_db()
     await _seed_demo_data_persistent()
     yield
+
 
 app = FastAPI(
     title="SharkRank API",
@@ -128,6 +129,7 @@ app.add_middleware(
 
 
 # === SCHEMAS ===
+
 
 class EventoSchema(BaseModel):
     type: str
@@ -199,6 +201,7 @@ class RevenueCatWebhook(BaseModel):
 
 # === ENDPOINTS ===
 
+
 # --- Auth ---
 # --- Auth ---
 @app.post("/auth/login", response_model=ArenaLoginResponse)
@@ -208,7 +211,7 @@ async def arena_login(request: ArenaLoginRequest):
         db.row_factory = aiosqlite.Row
         cursor = await db.execute("SELECT * FROM arenas WHERE id = ?", (request.arena_id,))
         arena = await cursor.fetchone()
-        
+
         if not arena:
             raise HTTPException(status_code=404, detail="Arena não encontrada")
 
@@ -230,12 +233,15 @@ async def list_players(arena_id: str):
     """Lista todos os jogadores de uma arena (Sprint 9: SQLite)."""
     async with aiosqlite.connect(DB_PATH) as db:
         db.row_factory = aiosqlite.Row
-        cursor = await db.execute("""
-            SELECT id, name, rating, matches_played, arena_id 
-            FROM players 
+        cursor = await db.execute(
+            """
+            SELECT id, name, rating, matches_played, arena_id
+            FROM players
             WHERE arena_id = ? AND is_active = 1
             ORDER BY name ASC
-        """, (arena_id,))
+        """,
+            (arena_id,),
+        )
         rows = await cursor.fetchall()
         players = [dict(row) for row in rows]
         return {"arena_id": arena_id, "players": players, "total": len(players)}
@@ -246,11 +252,27 @@ async def create_player(arena_id: str, request: PlayerCreateRequest):
     """Cadastra novo jogador na arena (Sprint 9: SQLite)."""
     pid = f"p-{uuid4().hex[:8]}"
     async with aiosqlite.connect(DB_PATH) as db:
-        await db.execute("""
-            INSERT INTO players (id, name, nickname, position, age, rating, matches_played, wins, arena_id, is_active)
+        await db.execute(
+            """
+            INSERT INTO players
+                (id, name, nickname, position, age,
+                 rating, matches_played, wins,
+                 arena_id, is_active)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (pid, request.name, request.nickname or request.name.split(' ')[0], 
-              request.position, request.age, 1000.0, 0, 0, arena_id, True))
+        """,
+            (
+                pid,
+                request.name,
+                request.nickname or request.name.split(" ")[0],
+                request.position,
+                request.age,
+                1000.0,
+                0,
+                0,
+                arena_id,
+                True,
+            ),
+        )
         await db.commit()
     return {"id": pid, "name": request.name, "rating": 1000.0}
 
@@ -265,9 +287,11 @@ async def elo_accuracy():
     """Métrica de divergência ELO provisório vs definitivo usando SQLite."""
     async with aiosqlite.connect(DB_PATH) as db:
         db.row_factory = aiosqlite.Row
-        cursor = await db.execute("SELECT elo_provisional FROM matches ORDER BY timestamp DESC LIMIT 100")
+        cursor = await db.execute(
+            "SELECT elo_provisional FROM matches ORDER BY timestamp DESC LIMIT 100"
+        )
         rows = await cursor.fetchall()
-        
+
     if not rows:
         return {"avg_divergence": 0.0, "sample_size": 0, "within_tolerance_pct": 100.0}
 
@@ -331,7 +355,9 @@ async def create_match(request: MatchCreateRequest):
     for s in request.sets:
         events = [
             Evento(
-                tipo=Fundamento(e.type) if e.type in [f.value for f in Fundamento] else Fundamento.ERRO_ATAQUE,
+                tipo=Fundamento(e.type)
+                if e.type in [f.value for f in Fundamento]
+                else Fundamento.ERRO_ATAQUE,
                 player_id=e.player,
                 timestamp=e.timestamp,
             )
@@ -353,11 +379,13 @@ async def create_match(request: MatchCreateRequest):
     current_ratings = {}
     match_counts = {}
     all_players = request.team_a + request.team_b
-    
+
     async with aiosqlite.connect(DB_PATH) as db:
         db.row_factory = aiosqlite.Row
         for pid in all_players:
-            cursor = await db.execute("SELECT rating, matches_played FROM players WHERE id = ?", (pid,))
+            cursor = await db.execute(
+                "SELECT rating, matches_played FROM players WHERE id = ?", (pid,)
+            )
             row = await cursor.fetchone()
             if row:
                 current_ratings[pid] = row["rating"]
@@ -371,34 +399,49 @@ async def create_match(request: MatchCreateRequest):
 
         # 6. Atualizar banco de jogadores
         for pid in all_players:
-            wins_inc = 1 if (pid in request.team_a and match.score_a > match.score_b) or \
-                           (pid in request.team_b and match.score_b > match.score_a) else 0
-            
-            await db.execute("""
-                UPDATE players 
-                SET rating = ?, matches_played = matches_played + 1, wins = wins + ? 
+            wins_inc = (
+                1
+                if (pid in request.team_a and match.score_a > match.score_b)
+                or (pid in request.team_b and match.score_b > match.score_a)
+                else 0
+            )
+
+            await db.execute(
+                """
+                UPDATE players
+                SET rating = ?, matches_played = matches_played + 1, wins = wins + ?
                 WHERE id = ?
-            """, (new_ratings[pid], wins_inc, pid))
+            """,
+                (new_ratings[pid], wins_inc, pid),
+            )
 
         # 7. Reconciliar com provisório
-        reconciliation = elo_engine.reconcile(request.elo_provisional or current_ratings, new_ratings)
+        reconciliation = elo_engine.reconcile(
+            request.elo_provisional or current_ratings, new_ratings
+        )
         reconciliation["match_id"] = request.match_id
 
         # 8. Salvar partida no banco SQLite
-        await db.execute("""
-            INSERT INTO matches (id, arena_id, idempotency_key, team_a, team_b, sets, elo_provisional, timestamp)
+        await db.execute(
+            """
+            INSERT INTO matches
+                (id, arena_id, idempotency_key,
+                 team_a, team_b, sets,
+                 elo_provisional, timestamp)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            request.match_id, 
-            request.arena_id, 
-            request.idempotency_key, 
-            json.dumps(request.team_a), 
-            json.dumps(request.team_b), 
-            json.dumps([s.model_dump() for s in request.sets]), 
-            json.dumps(reconciliation), 
-            datetime.utcnow().isoformat()
-        ))
-        
+        """,
+            (
+                request.match_id,
+                request.arena_id,
+                request.idempotency_key,
+                json.dumps(request.team_a),
+                json.dumps(request.team_b),
+                json.dumps([s.model_dump() for s in request.sets]),
+                json.dumps(reconciliation),
+                datetime.utcnow().isoformat(),
+            ),
+        )
+
         await db.commit()
 
     # 9. Cache idempotência
@@ -412,23 +455,26 @@ async def get_player_stats(player_id: str):
     """Agrega estatísticas detalhadas de um jogador via SQLite."""
     async with aiosqlite.connect(DB_PATH) as db:
         db.row_factory = aiosqlite.Row
-        
+
         cursor = await db.execute("SELECT * FROM players WHERE id = ?", (player_id,))
         player = await cursor.fetchone()
         if not player:
             raise HTTPException(status_code=404, detail="Jogador não encontrado")
 
-        cursor = await db.execute("""
-            SELECT team_a, team_b, sets FROM matches 
+        cursor = await db.execute(
+            """
+            SELECT team_a, team_b, sets FROM matches
             WHERE team_a LIKE ? OR team_b LIKE ?
-        """, (f'%"{player_id}"%', f'%"{player_id}"%'))
+        """,
+            (f'%"{player_id}"%', f'%"{player_id}"%'),
+        )
         matches = await cursor.fetchall()
 
     stats = {
         "total_matches": len(matches),
         "wins": player["wins"],
         "losses": player["matches_played"] - player["wins"],
-        "fundamentals": {}, 
+        "fundamentals": {},
     }
 
     for m in matches:
@@ -445,7 +491,7 @@ async def get_player_stats(player_id: str):
         "player_id": player_id,
         "name": player["name"],
         "rating": player["rating"],
-        "stats": stats
+        "stats": stats,
     }
 
 
@@ -454,38 +500,46 @@ async def get_player_matches(player_id: str):
     """Retorna as últimas 20 partidas de um jogador via SQLite."""
     async with aiosqlite.connect(DB_PATH) as db:
         db.row_factory = aiosqlite.Row
-        cursor = await db.execute("""
-            SELECT * FROM matches 
+        cursor = await db.execute(
+            """
+            SELECT * FROM matches
             WHERE team_a LIKE ? OR team_b LIKE ?
             ORDER BY timestamp DESC LIMIT 20
-        """, (f'%"{player_id}"%', f'%"{player_id}"%'))
+        """,
+            (f'%"{player_id}"%', f'%"{player_id}"%'),
+        )
         rows = await cursor.fetchall()
-        
+
     p_matches = [dict(row) for row in rows]
     for m in p_matches:
         m["team_a"] = json.loads(m["team_a"]) if m["team_a"] else []
         m["team_b"] = json.loads(m["team_b"]) if m["team_b"] else []
         m["sets"] = json.loads(m["sets"]) if m["sets"] else []
         m["elo_provisional"] = json.loads(m["elo_provisional"]) if m["elo_provisional"] else {}
-        
+
     return {"player_id": player_id, "matches": p_matches}
 
-# O get_arena_ranking já foi refatorado antes no top, então vou manter o código.
-# A função de get_arena_ranking que estava aqui duplicada vai ser apagada, pois já tem uma la em cima.
+
+# O get_arena_ranking já foi refatorado antes no top.
+# A função duplicada foi removida.
+
 
 @app.get("/arenas/{arena_id}/ranking")
 async def get_arena_ranking(arena_id: str):
     """Ranking ELO da arena via SQLite."""
     async with aiosqlite.connect(DB_PATH) as db:
         db.row_factory = aiosqlite.Row
-        cursor = await db.execute("""
-            SELECT id, name, rating, matches_played, arena_id 
-            FROM players 
+        cursor = await db.execute(
+            """
+            SELECT id, name, rating, matches_played, arena_id
+            FROM players
             WHERE arena_id = ? AND is_active = 1
             ORDER BY rating DESC
-        """, (arena_id,))
+        """,
+            (arena_id,),
+        )
         rows = await cursor.fetchall()
-        
+
     ranking = [dict(row) for row in rows]
     return {"arena_id": arena_id, "ranking": ranking}
 
@@ -520,6 +574,7 @@ async def get_calibration_report(arena_id: str):
 
 # === CALIBRATION SURVEY (Shadow Mode — Decisão #3) ===
 
+
 class SurveyRequest(BaseModel):
     arena_id: str
     match_id: str
@@ -549,6 +604,7 @@ async def submit_survey(request: SurveyRequest):
 
 # === ANALYTICS EVENTS (BA→Mobile directive) ===
 
+
 class AnalyticsEvent(BaseModel):
     event_name: str  # sr_match_started, sr_fundamento_marcado, etc.
     arena_id: str
@@ -574,6 +630,7 @@ async def track_event(event: AnalyticsEvent):
 
 # === SEED DATA PERSISTENTE (Sprint 5 & Sprint 9) ===
 
+
 async def _seed_demo_data_persistent():
     """Injeta arenas e jogadores lendários da Sprint 5 no SQLite."""
     async with aiosqlite.connect(DB_PATH) as db:
@@ -581,11 +638,22 @@ async def _seed_demo_data_persistent():
         count = await cursor.fetchone()
         if count[0] == 0:
             aid = "arena-blumenau-01"
-            await db.execute("""
+            await db.execute(
+                """
                 INSERT INTO arenas (id, name, city, state, pin_hash, plan_tier, shadow_mode)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
-            """, (aid, "Arena Praia do Moura", "Blumenau", "SC", sha256("1234".encode()).hexdigest(), "premium", False))
-            
+            """,
+                (
+                    aid,
+                    "Arena Praia do Moura",
+                    "Blumenau",
+                    "SC",
+                    sha256(b"1234").hexdigest(),
+                    "premium",
+                    False,
+                ),
+            )
+
             # Seed da Sprint 5 (Os Craques da Areia)
             seed_players = [
                 ("p-carlao", "Carlão", 2100.0, 45),
@@ -597,11 +665,28 @@ async def _seed_demo_data_persistent():
                 ("p-candinho", "Candinho", 1100.0, 4),
             ]
             for pid, name, rating, matches in seed_players:
-                await db.execute("""
-                    INSERT INTO players (id, name, nickname, position, rating, matches_played, wins, arena_id, is_active)
+                await db.execute(
+                    """
+                    INSERT INTO players
+                        (id, name, nickname, position,
+                         rating, matches_played, wins,
+                         arena_id, is_active)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (pid, name, name.split(' ')[0], "Atacante", rating, matches, matches // 2, aid, True))
-            
-            await db.commit()
-            print(f"[OK] Seed data da Sprint 5 injetado com sucesso ({len(seed_players)} jogadores).")
+                """,
+                    (
+                        pid,
+                        name,
+                        name.split(" ")[0],
+                        "Atacante",
+                        rating,
+                        matches,
+                        matches // 2,
+                        aid,
+                        True,
+                    ),
+                )
 
+            await db.commit()
+            print(
+                f"[OK] Seed data da Sprint 5 injetado com sucesso ({len(seed_players)} jogadores)."
+            )

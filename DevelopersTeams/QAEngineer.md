@@ -38,3 +38,14 @@ Quando acionado, entregue:
 2. O código do teste em JavaScript, pronto para execução.
 3. Instruções curtas de como rodar o teste no terminal.
 - **[2026-04-26]:** [BUG-001] Cadastro de atletas impossivel. Causa: api.apiFetch nao era metodo publico. Fix: criado api.createPlayer(). Severidade: CRITICA.
+- **[2026-04-26]:** [CI-FIX] Corrigidos 84 erros de linter (ruff) no backend Python:
+  - Imports duplicados/nao usados removidos (F401, F811)
+  - Imports reordenados (I001)
+  - Whitespace/trailing spaces limpos (W291, W293)
+  - Linhas >100 chars quebradas (E501)
+  - f-string sem placeholder corrigida (F541)
+  - Tipo 'int' corrigido para 'number' em MatchTimeline.tsx
+  - Prop 'quality' removida de CameraRecordingOptions (SDK 54)
+  - Estilos faltantes adicionados (configBtn, activeBtn, startBtn, confirmBtn)
+  - @types/jest instalado para resolver TS2582/TS2708
+  - RESULTADO: ruff check = All checks passed! | tsc --noEmit = 0 erros | pytest = 26 passed

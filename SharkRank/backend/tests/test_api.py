@@ -3,19 +3,20 @@ Testes da API FastAPI — SharkRank
 Cobre: health, ELO config, match creation, ranking, surveys, analytics.
 """
 
+import os
+
 import pytest
 from fastapi.testclient import TestClient
 
+from app.database import DB_PATH
 from app.main import app
 
-
-import os
-from app.database import DB_PATH
 
 @pytest.fixture(autouse=True)
 def clean_db():
     if os.path.exists(DB_PATH):
         os.remove(DB_PATH)
+
 
 @pytest.fixture
 def client():
@@ -54,14 +55,30 @@ class TestMatchEndpoint:
             "idempotency_key": "abc123def456",
             "team_a": ["p-rafael", "p-mateus"],
             "team_b": ["p-lucas", "p-pedro"],
-            "sets": [{
-                "score_a": 18, "score_b": 12,
-                "events": [
-                    {"type": "shark_ataque", "player": "p-rafael", "timestamp": "2026-04-25T10:00:00Z"},
-                    {"type": "shark_ataque", "player": "p-mateus", "timestamp": "2026-04-25T10:01:00Z"},
-                ]
-            }],
-            "elo_provisional": {"p-rafael": 1625, "p-mateus": 1560, "p-lucas": 1575, "p-pedro": 1515},
+            "sets": [
+                {
+                    "score_a": 18,
+                    "score_b": 12,
+                    "events": [
+                        {
+                            "type": "shark_ataque",
+                            "player": "p-rafael",
+                            "timestamp": "2026-04-25T10:00:00Z",
+                        },
+                        {
+                            "type": "shark_ataque",
+                            "player": "p-mateus",
+                            "timestamp": "2026-04-25T10:01:00Z",
+                        },
+                    ],
+                }
+            ],
+            "elo_provisional": {
+                "p-rafael": 1625,
+                "p-mateus": 1560,
+                "p-lucas": 1575,
+                "p-pedro": 1515,
+            },
             "client_version": "1.0.0",
             "elo_config_version": "v1",
         }
@@ -147,13 +164,16 @@ class TestCalibrationSurvey:
 
     def test_calibration_report_with_surveys(self, client):
         # Submeter survey primeiro
-        client.post("/calibration-surveys", json={
-            "arena_id": "arena-blumenau-01",
-            "match_id": "test-cal-001",
-            "q1_accuracy_score": 4,
-            "q2_best_player": "Rafael",
-            "q3_would_use": "Sim",
-        })
+        client.post(
+            "/calibration-surveys",
+            json={
+                "arena_id": "arena-blumenau-01",
+                "match_id": "test-cal-001",
+                "q1_accuracy_score": 4,
+                "q2_best_player": "Rafael",
+                "q3_would_use": "Sim",
+            },
+        )
         r = client.get("/arenas/arena-blumenau-01/calibration-report")
         assert r.status_code == 200
         data = r.json()

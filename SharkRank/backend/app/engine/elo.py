@@ -11,18 +11,17 @@ Implementa:
 from __future__ import annotations
 
 import hashlib
-import json
 import math
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 from typing import Any
-from uuid import UUID
-
 
 # === FUNDAMENTOS E PESOS ===
 
-class Fundamento(str, Enum):
+
+class Fundamento(StrEnum):
     """Fundamentos do Futevôlei (Sprint 5)."""
+
     COXA = "coxa"
     PEITO = "peito"
     OMBRO = "ombro"
@@ -51,6 +50,7 @@ PESOS_FUNDAMENTOS: dict[str, float] = {
 @dataclass
 class Evento:
     """Um evento de fundamento registrado durante a partida."""
+
     tipo: Fundamento
     player_id: str
     timestamp: str  # ISO 8601
@@ -59,6 +59,7 @@ class Evento:
 @dataclass
 class SetResult:
     """Resultado de um set com eventos de fundamentos."""
+
     score_a: int
     score_b: int
     events: list[Evento] = field(default_factory=list)
@@ -67,6 +68,7 @@ class SetResult:
 @dataclass
 class MatchResult:
     """Resultado completo de uma partida de futevôlei (duplas)."""
+
     match_id: str
     arena_id: str
     team_a: list[str]  # player IDs
@@ -102,6 +104,7 @@ class MatchResult:
 
 # === K-FACTOR DINÂMICO ===
 
+
 def get_k_factor(total_matches: int) -> float:
     """
     K-factor dinâmico conforme PRD v2.0, Seção 4:
@@ -118,6 +121,7 @@ def get_k_factor(total_matches: int) -> float:
 
 
 # === MOTOR ELO COMPLETO (BACKEND — FONTE DE VERDADE) ===
+
 
 class ELOEngine:
     """
@@ -202,7 +206,8 @@ class ELOEngine:
             perf_bonus = self.calculate_performance_bonus(all_events, player_id)
 
             # Fórmula ELO com bonus de fundamentos e margem
-            # Damping factor 0.3 para manter divergência ≤5pts vs. fórmula simplificada (contrato QA)
+            # Damping factor 0.3 para manter divergência ≤5pts
+            # vs. fórmula simplificada (contrato QA)
             delta = k * (actual - expected) + perf_bonus * 0.3 * (1 + margin * 0.3)
 
             new_ratings[player_id] = round(rating + delta, 1)
@@ -238,6 +243,7 @@ class ELOEngine:
 
 
 # === ELO SIMPLIFICADO (EXPORTÁVEL PARA MOBILE) ===
+
 
 class ELOSimplified:
     """
@@ -284,11 +290,12 @@ class ELOSimplified:
                 "erro_nao_forcado",
             ],
             "note": "Fundamentos são rastreados pelo mobile mas NÃO usados no cálculo provisório. "
-                    "O backend usa os fundamentos no cálculo definitivo.",
+            "O backend usa os fundamentos no cálculo definitivo.",
         }
 
 
 # === IDEMPOTÊNCIA ===
+
 
 class IdempotencyStore:
     """

@@ -1,0 +1,1054 @@
+Run ruff check app/ tests/
+  ruff check app/ tests/
+  shell: /usr/bin/bash -e {0}
+  env:
+    pythonLocation: /opt/hostedtoolcache/Python/3.12.13/x64
+    PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.12.13/x64/lib/pkgconfig
+    Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.13/x64
+    Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.13/x64
+    Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.12.13/x64
+    LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.12.13/x64/lib
+I001 [*] Import block is un-sorted or un-formatted
+ --> app/database.py:1:1
+  |
+1 | / import aiosqlite
+2 | | import json
+3 | | import os
+  | |_________^
+4 |
+5 |   DB_PATH = "sharkrank.db"
+  |
+help: Organize imports
+
+F401 [*] `json` imported but unused
+ --> app/database.py:2:8
+  |
+1 | import aiosqlite
+2 | import json
+  |        ^^^^
+3 | import os
+  |
+help: Remove unused import: `json`
+
+F401 [*] `os` imported but unused
+ --> app/database.py:3:8
+  |
+1 | import aiosqlite
+2 | import json
+3 | import os
+  |        ^^
+4 |
+5 | DB_PATH = "sharkrank.db"
+  |
+help: Remove unused import: `os`
+
+W293 [*] Blank line contains whitespace
+  --> app/database.py:21:1
+   |
+19 |             )
+20 |         """)
+21 |         
+   | ^^^^^^^^
+22 |         # Tabela de Jogadores
+23 |         await db.execute("""
+   |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+  --> app/database.py:38:1
+   |
+36 |             )
+37 |         """)
+38 |         
+   | ^^^^^^^^
+39 |         # Tabela de Partidas
+40 |         await db.execute("""
+   |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+  --> app/database.py:53:1
+   |
+51 |             )
+52 |         """)
+53 |         
+   | ^^^^^^^^
+54 |         await db.commit()
+   |
+help: Remove whitespace from blank line
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> app/engine/elo.py:11:1
+   |
+ 9 |   """
+10 |
+11 | / from __future__ import annotations
+12 | |
+13 | | import hashlib
+14 | | import json
+15 | | import math
+16 | | from dataclasses import dataclass, field
+17 | | from enum import Enum
+18 | | from typing import Any
+19 | | from uuid import UUID
+   | |_____________________^
+   |
+help: Organize imports
+
+F401 [*] `json` imported but unused
+  --> app/engine/elo.py:14:8
+   |
+13 | import hashlib
+14 | import json
+   |        ^^^^
+15 | import math
+16 | from dataclasses import dataclass, field
+   |
+help: Remove unused import: `json`
+
+F401 [*] `uuid.UUID` imported but unused
+  --> app/engine/elo.py:19:18
+   |
+17 | from enum import Enum
+18 | from typing import Any
+19 | from uuid import UUID
+   |                  ^^^^
+   |
+help: Remove unused import: `uuid.UUID`
+
+UP042 Class Fundamento inherits from both `str` and `enum.Enum`
+  --> app/engine/elo.py:24:7
+   |
+22 | # === FUNDAMENTOS E PESOS ===
+23 |
+24 | class Fundamento(str, Enum):
+   |       ^^^^^^^^^^
+25 |     """Fundamentos do Futevôlei (Sprint 5)."""
+26 |     COXA = "coxa"
+   |
+help: Inherit from `enum.StrEnum`
+
+E501 Line too long (101 > 100)
+   --> app/engine/elo.py:205:101
+    |
+204 |             # Fórmula ELO com bonus de fundamentos e margem
+205 |             # Damping factor 0.3 para manter divergência ≤5pts vs. fórmula simplificada (contrato QA)
+    |                                                                                                     ^
+206 |             delta = k * (actual - expected) + perf_bonus * 0.3 * (1 + margin * 0.3)
+    |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> app/main.py:6:1
+   |
+ 4 |   """
+ 5 |
+ 6 | / from __future__ import annotations
+ 7 | |
+ 8 | | from contextlib import asynccontextmanager
+ 9 | | from datetime import datetime, timedelta
+10 | | from uuid import uuid4
+11 | | from hashlib import sha256
+12 | | from typing import Annotated
+13 | |
+14 | | import time
+15 | | import os
+16 | | from .database import init_db, DB_PATH
+17 | | import aiosqlite
+18 | | import json
+19 | | import base64
+20 | | import hmac
+21 | |
+22 | | from fastapi import FastAPI, HTTPException, status, Depends, Header
+23 | | from fastapi.middleware.cors import CORSMiddleware
+24 | | from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+25 | | from pydantic import BaseModel, Field
+26 | |
+27 | | from app.engine.elo import (
+28 | |     ELOEngine,
+29 | |     ELOSimplified,
+30 | |     Evento,
+31 | |     Fundamento,
+32 | |     IdempotencyStore,
+33 | |     MatchResult,
+34 | |     SetResult,
+35 | |     get_k_factor,
+36 | | )
+37 | |
+38 | | # === JWT minimal (sem dependência externa — produção usará python-jose) ===
+39 | | import base64
+40 | | import json
+41 | | import hmac
+   | |___________^
+42 |
+43 |   JWT_SECRET = os.getenv("JWT_SECRET", "sharkrank-dev-secret-change-in-prod")
+   |
+help: Organize imports
+
+F401 [*] `time` imported but unused
+  --> app/main.py:14:8
+   |
+12 | from typing import Annotated
+13 |
+14 | import time
+   |        ^^^^
+15 | import os
+16 | from .database import init_db, DB_PATH
+   |
+help: Remove unused import: `time`
+
+F401 [*] `fastapi.Header` imported but unused
+  --> app/main.py:22:62
+   |
+20 | import hmac
+21 |
+22 | from fastapi import FastAPI, HTTPException, status, Depends, Header
+   |                                                              ^^^^^^
+23 | from fastapi.middleware.cors import CORSMiddleware
+24 | from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+   |
+help: Remove unused import: `fastapi.Header`
+
+F401 [*] `app.engine.elo.get_k_factor` imported but unused
+  --> app/main.py:35:5
+   |
+33 |     MatchResult,
+34 |     SetResult,
+35 |     get_k_factor,
+   |     ^^^^^^^^^^^^
+36 | )
+   |
+help: Remove unused import: `app.engine.elo.get_k_factor`
+
+F811 [*] Redefinition of unused `base64` from line 19
+  --> app/main.py:39:8
+   |
+38 | # === JWT minimal (sem dependência externa — produção usará python-jose) ===
+39 | import base64
+   |        ^^^^^^ `base64` redefined here
+40 | import json
+41 | import hmac
+   |
+  ::: app/main.py:19:8
+   |
+17 | import aiosqlite
+18 | import json
+19 | import base64
+   |        ------ previous definition of `base64` here
+20 | import hmac
+   |
+help: Remove definition: `base64`
+
+F811 [*] Redefinition of unused `json` from line 18
+  --> app/main.py:40:8
+   |
+38 | # === JWT minimal (sem dependência externa — produção usará python-jose) ===
+39 | import base64
+40 | import json
+   |        ^^^^ `json` redefined here
+41 | import hmac
+   |
+  ::: app/main.py:18:8
+   |
+16 | from .database import init_db, DB_PATH
+17 | import aiosqlite
+18 | import json
+   |        ---- previous definition of `json` here
+19 | import base64
+20 | import hmac
+   |
+help: Remove definition: `json`
+
+F811 [*] Redefinition of unused `hmac` from line 20
+  --> app/main.py:41:8
+   |
+39 | import base64
+40 | import json
+41 | import hmac
+   |        ^^^^ `hmac` redefined here
+42 |
+43 | JWT_SECRET = os.getenv("JWT_SECRET", "sharkrank-dev-secret-change-in-prod")
+   |
+  ::: app/main.py:20:8
+   |
+18 | import json
+19 | import base64
+20 | import hmac
+   |        ---- previous definition of `hmac` here
+21 |
+22 | from fastapi import FastAPI, HTTPException, status, Depends, Header
+   |
+help: Remove definition: `hmac`
+
+W293 [*] Blank line contains whitespace
+   --> app/main.py:211:1
+    |
+209 |         cursor = await db.execute("SELECT * FROM arenas WHERE id = ?", (request.arena_id,))
+210 |         arena = await cursor.fetchone()
+211 |         
+    | ^^^^^^^^
+212 |         if not arena:
+213 |             raise HTTPException(status_code=404, detail="Arena não encontrada")
+    |
+help: Remove whitespace from blank line
+
+W291 Trailing whitespace
+   --> app/main.py:234:62
+    |
+232 |         db.row_factory = aiosqlite.Row
+233 |         cursor = await db.execute("""
+234 |             SELECT id, name, rating, matches_played, arena_id 
+    |                                                              ^
+235 |             FROM players 
+236 |             WHERE arena_id = ? AND is_active = 1
+    |
+help: Remove trailing whitespace
+
+W291 Trailing whitespace
+   --> app/main.py:235:25
+    |
+233 |         cursor = await db.execute("""
+234 |             SELECT id, name, rating, matches_played, arena_id 
+235 |             FROM players 
+    |                         ^
+236 |             WHERE arena_id = ? AND is_active = 1
+237 |             ORDER BY name ASC
+    |
+help: Remove trailing whitespace
+
+E501 Line too long (118 > 100)
+   --> app/main.py:250:101
+    |
+248 |     async with aiosqlite.connect(DB_PATH) as db:
+249 |         await db.execute("""
+250 |             INSERT INTO players (id, name, nickname, position, age, rating, matches_played, wins, arena_id, is_active)
+    |                                                                                                     ^^^^^^^^^^^^^^^^^^
+251 |             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+252 |         """, (pid, request.name, request.nickname or request.name.split(' ')[0], 
+    |
+
+W291 [*] Trailing whitespace
+   --> app/main.py:252:81
+    |
+250 |             INSERT INTO players (id, name, nickname, position, age, rating, matches_played, wins, arena_id, is_active)
+251 |             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+252 |         """, (pid, request.name, request.nickname or request.name.split(' ')[0], 
+    |                                                                                 ^
+253 |               request.position, request.age, 1000.0, 0, 0, arena_id, True))
+254 |         await db.commit()
+    |
+help: Remove trailing whitespace
+
+E501 Line too long (106 > 100)
+   --> app/main.py:268:101
+    |
+266 |     async with aiosqlite.connect(DB_PATH) as db:
+267 |         db.row_factory = aiosqlite.Row
+268 |         cursor = await db.execute("SELECT elo_provisional FROM matches ORDER BY timestamp DESC LIMIT 100")
+    |                                                                                                     ^^^^^^
+269 |         rows = await cursor.fetchall()
+    |
+
+W293 [*] Blank line contains whitespace
+   --> app/main.py:270:1
+    |
+268 |         cursor = await db.execute("SELECT elo_provisional FROM matches ORDER BY timestamp DESC LIMIT 100")
+269 |         rows = await cursor.fetchall()
+270 |         
+    | ^^^^^^^^
+271 |     if not rows:
+272 |         return {"avg_divergence": 0.0, "sample_size": 0, "within_tolerance_pct": 100.0}
+    |
+help: Remove whitespace from blank line
+
+E501 Line too long (111 > 100)
+   --> app/main.py:334:101
+    |
+332 |         events = [
+333 |             Evento(
+334 |                 tipo=Fundamento(e.type) if e.type in [f.value for f in Fundamento] else Fundamento.ERRO_ATAQUE,
+    |                                                                                                     ^^^^^^^^^^^
+335 |                 player_id=e.player,
+336 |                 timestamp=e.timestamp,
+    |
+
+W293 [*] Blank line contains whitespace
+   --> app/main.py:356:1
+    |
+354 |     match_counts = {}
+355 |     all_players = request.team_a + request.team_b
+356 |     
+    | ^^^^
+357 |     async with aiosqlite.connect(DB_PATH) as db:
+358 |         db.row_factory = aiosqlite.Row
+    |
+help: Remove whitespace from blank line
+
+E501 Line too long (104 > 100)
+   --> app/main.py:360:101
+    |
+358 |         db.row_factory = aiosqlite.Row
+359 |         for pid in all_players:
+360 |             cursor = await db.execute("SELECT rating, matches_played FROM players WHERE id = ?", (pid,))
+    |                                                                                                     ^^^^
+361 |             row = await cursor.fetchone()
+362 |             if row:
+    |
+
+W293 [*] Blank line contains whitespace
+   --> app/main.py:376:1
+    |
+374 |             wins_inc = 1 if (pid in request.team_a and match.score_a > match.score_b) or \
+375 |                            (pid in request.team_b and match.score_b > match.score_a) else 0
+376 |             
+    | ^^^^^^^^^^^^
+377 |             await db.execute("""
+378 |                 UPDATE players 
+    |
+help: Remove whitespace from blank line
+
+W291 Trailing whitespace
+   --> app/main.py:378:31
+    |
+377 |             await db.execute("""
+378 |                 UPDATE players 
+    |                               ^
+379 |                 SET rating = ?, matches_played = matches_played + 1, wins = wins + ? 
+380 |                 WHERE id = ?
+    |
+help: Remove trailing whitespace
+
+W291 Trailing whitespace
+   --> app/main.py:379:85
+    |
+377 |             await db.execute("""
+378 |                 UPDATE players 
+379 |                 SET rating = ?, matches_played = matches_played + 1, wins = wins + ? 
+    |                                                                                     ^
+380 |                 WHERE id = ?
+381 |             """, (new_ratings[pid], wins_inc, pid))
+    |
+help: Remove trailing whitespace
+
+E501 Line too long (102 > 100)
+   --> app/main.py:384:101
+    |
+383 |         # 7. Reconciliar com provisório
+384 |         reconciliation = elo_engine.reconcile(request.elo_provisional or current_ratings, new_ratings)
+    |                                                                                                     ^^
+385 |         reconciliation["match_id"] = request.match_id
+    |
+
+E501 Line too long (113 > 100)
+   --> app/main.py:389:101
+    |
+387 |         # 8. Salvar partida no banco SQLite
+388 |         await db.execute("""
+389 |             INSERT INTO matches (id, arena_id, idempotency_key, team_a, team_b, sets, elo_provisional, timestamp)
+    |                                                                                                     ^^^^^^^^^^^^^
+390 |             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+391 |         """, (
+    |
+
+W291 [*] Trailing whitespace
+   --> app/main.py:392:30
+    |
+390 |             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+391 |         """, (
+392 |             request.match_id, 
+    |                              ^
+393 |             request.arena_id, 
+394 |             request.idempotency_key, 
+    |
+help: Remove trailing whitespace
+
+W291 [*] Trailing whitespace
+   --> app/main.py:393:30
+    |
+391 |         """, (
+392 |             request.match_id, 
+393 |             request.arena_id, 
+    |                              ^
+394 |             request.idempotency_key, 
+395 |             json.dumps(request.team_a), 
+    |
+help: Remove trailing whitespace
+
+W291 [*] Trailing whitespace
+   --> app/main.py:394:37
+    |
+392 |             request.match_id, 
+393 |             request.arena_id, 
+394 |             request.idempotency_key, 
+    |                                     ^
+395 |             json.dumps(request.team_a), 
+396 |             json.dumps(request.team_b), 
+    |
+help: Remove trailing whitespace
+
+W291 [*] Trailing whitespace
+   --> app/main.py:395:40
+    |
+393 |             request.arena_id, 
+394 |             request.idempotency_key, 
+395 |             json.dumps(request.team_a), 
+    |                                        ^
+396 |             json.dumps(request.team_b), 
+397 |             json.dumps([s.model_dump() for s in request.sets]), 
+    |
+help: Remove trailing whitespace
+
+W291 [*] Trailing whitespace
+   --> app/main.py:396:40
+    |
+394 |             request.idempotency_key, 
+395 |             json.dumps(request.team_a), 
+396 |             json.dumps(request.team_b), 
+    |                                        ^
+397 |             json.dumps([s.model_dump() for s in request.sets]), 
+398 |             json.dumps(reconciliation), 
+    |
+help: Remove trailing whitespace
+
+W291 [*] Trailing whitespace
+   --> app/main.py:397:64
+    |
+395 |             json.dumps(request.team_a), 
+396 |             json.dumps(request.team_b), 
+397 |             json.dumps([s.model_dump() for s in request.sets]), 
+    |                                                                ^
+398 |             json.dumps(reconciliation), 
+399 |             datetime.utcnow().isoformat()
+    |
+help: Remove trailing whitespace
+
+W291 [*] Trailing whitespace
+   --> app/main.py:398:40
+    |
+396 |             json.dumps(request.team_b), 
+397 |             json.dumps([s.model_dump() for s in request.sets]), 
+398 |             json.dumps(reconciliation), 
+    |                                        ^
+399 |             datetime.utcnow().isoformat()
+400 |         ))
+    |
+help: Remove trailing whitespace
+
+W293 [*] Blank line contains whitespace
+   --> app/main.py:401:1
+    |
+399 |             datetime.utcnow().isoformat()
+400 |         ))
+401 |         
+    | ^^^^^^^^
+402 |         await db.commit()
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> app/main.py:415:1
+    |
+413 |     async with aiosqlite.connect(DB_PATH) as db:
+414 |         db.row_factory = aiosqlite.Row
+415 |         
+    | ^^^^^^^^
+416 |         cursor = await db.execute("SELECT * FROM players WHERE id = ?", (player_id,))
+417 |         player = await cursor.fetchone()
+    |
+help: Remove whitespace from blank line
+
+W291 Trailing whitespace
+   --> app/main.py:422:53
+    |
+421 |         cursor = await db.execute("""
+422 |             SELECT team_a, team_b, sets FROM matches 
+    |                                                     ^
+423 |             WHERE team_a LIKE ? OR team_b LIKE ?
+424 |         """, (f'%"{player_id}"%', f'%"{player_id}"%'))
+    |
+help: Remove trailing whitespace
+
+W291 [*] Trailing whitespace
+   --> app/main.py:431:28
+    |
+429 |         "wins": player["wins"],
+430 |         "losses": player["matches_played"] - player["wins"],
+431 |         "fundamentals": {}, 
+    |                            ^
+432 |     }
+    |
+help: Remove trailing whitespace
+
+W291 Trailing whitespace
+   --> app/main.py:458:34
+    |
+456 |         db.row_factory = aiosqlite.Row
+457 |         cursor = await db.execute("""
+458 |             SELECT * FROM matches 
+    |                                  ^
+459 |             WHERE team_a LIKE ? OR team_b LIKE ?
+460 |             ORDER BY timestamp DESC LIMIT 20
+    |
+help: Remove trailing whitespace
+
+W293 [*] Blank line contains whitespace
+   --> app/main.py:463:1
+    |
+461 |         """, (f'%"{player_id}"%', f'%"{player_id}"%'))
+462 |         rows = await cursor.fetchall()
+463 |         
+    | ^^^^^^^^
+464 |     p_matches = [dict(row) for row in rows]
+465 |     for m in p_matches:
+    |
+help: Remove whitespace from blank line
+
+W293 [*] Blank line contains whitespace
+   --> app/main.py:470:1
+    |
+468 |         m["sets"] = json.loads(m["sets"]) if m["sets"] else []
+469 |         m["elo_provisional"] = json.loads(m["elo_provisional"]) if m["elo_provisional"] else {}
+470 |         
+    | ^^^^^^^^
+471 |     return {"player_id": player_id, "matches": p_matches}
+    |
+help: Remove whitespace from blank line
+
+E501 Line too long (102 > 100)
+   --> app/main.py:474:101
+    |
+473 | # O get_arena_ranking já foi refatorado antes no top, então vou manter o código.
+474 | # A função de get_arena_ranking que estava aqui duplicada vai ser apagada, pois já tem uma la em cima.
+    |                                                                                                     ^^
+475 |
+476 | @app.get("/arenas/{arena_id}/ranking")
+    |
+
+W291 Trailing whitespace
+   --> app/main.py:482:62
+    |
+480 |         db.row_factory = aiosqlite.Row
+481 |         cursor = await db.execute("""
+482 |             SELECT id, name, rating, matches_played, arena_id 
+    |                                                              ^
+483 |             FROM players 
+484 |             WHERE arena_id = ? AND is_active = 1
+    |
+help: Remove trailing whitespace
+
+W291 Trailing whitespace
+   --> app/main.py:483:25
+    |
+481 |         cursor = await db.execute("""
+482 |             SELECT id, name, rating, matches_played, arena_id 
+483 |             FROM players 
+    |                         ^
+484 |             WHERE arena_id = ? AND is_active = 1
+485 |             ORDER BY rating DESC
+    |
+help: Remove trailing whitespace
+
+W293 [*] Blank line contains whitespace
+   --> app/main.py:488:1
+    |
+486 |         """, (arena_id,))
+487 |         rows = await cursor.fetchall()
+488 |         
+    | ^^^^^^^^
+489 |     ranking = [dict(row) for row in rows]
+490 |     return {"arena_id": arena_id, "ranking": ranking}
+    |
+help: Remove whitespace from blank line
+
+UP012 [*] Unnecessary call to `encode` as UTF-8
+   --> app/main.py:587:73
+    |
+585 |                 INSERT INTO arenas (id, name, city, state, pin_hash, plan_tier, shadow_mode)
+586 |                 VALUES (?, ?, ?, ?, ?, ?, ?)
+587 |             """, (aid, "Arena Praia do Moura", "Blumenau", "SC", sha256("1234".encode()).hexdigest(), "premium", False))
+    |                                                                         ^^^^^^^^^^^^^^^
+588 |             
+589 |             # Seed da Sprint 5 (Os Craques da Areia)
+    |
+help: Rewrite as bytes literal
+
+E501 Line too long (120 > 100)
+   --> app/main.py:587:101
+    |
+585 |                 INSERT INTO arenas (id, name, city, state, pin_hash, plan_tier, shadow_mode)
+586 |                 VALUES (?, ?, ?, ?, ?, ?, ?)
+587 |             """, (aid, "Arena Praia do Moura", "Blumenau", "SC", sha256("1234".encode()).hexdigest(), "premium", False))
+    |                                                                                                     ^^^^^^^^^^^^^^^^^^^^
+588 |             
+589 |             # Seed da Sprint 5 (Os Craques da Areia)
+    |
+
+W293 [*] Blank line contains whitespace
+   --> app/main.py:588:1
+    |
+586 |                 VALUES (?, ?, ?, ?, ?, ?, ?)
+587 |             """, (aid, "Arena Praia do Moura", "Blumenau", "SC", sha256("1234".encode()).hexdigest(), "premium", False))
+588 |             
+    | ^^^^^^^^^^^^
+589 |             # Seed da Sprint 5 (Os Craques da Areia)
+590 |             seed_players = [
+    |
+help: Remove whitespace from blank line
+
+E501 Line too long (121 > 100)
+   --> app/main.py:601:101
+    |
+599 |             for pid, name, rating, matches in seed_players:
+600 |                 await db.execute("""
+601 |                     INSERT INTO players (id, name, nickname, position, rating, matches_played, wins, arena_id, is_active)
+    |                                                                                                     ^^^^^^^^^^^^^^^^^^^^^
+602 |                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+603 |                 """, (pid, name, name.split(' ')[0], "Atacante", rating, matches, matches // 2, aid, True))
+    |
+
+E501 Line too long (107 > 100)
+   --> app/main.py:603:101
+    |
+601 |                     INSERT INTO players (id, name, nickname, position, rating, matches_played, wins, arena_id, is_active)
+602 |                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+603 |                 """, (pid, name, name.split(' ')[0], "Atacante", rating, matches, matches // 2, aid, True))
+    |                                                                                                     ^^^^^^^
+604 |             
+605 |             await db.commit()
+    |
+
+W293 [*] Blank line contains whitespace
+   --> app/main.py:604:1
+    |
+602 |                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+603 |                 """, (pid, name, name.split(' ')[0], "Atacante", rating, matches, matches // 2, aid, True))
+604 |             
+    | ^^^^^^^^^^^^
+605 |             await db.commit()
+606 |             print(f"[OK] Seed data da Sprint 5 injetado com sucesso ({len(seed_players)} jogadores).")
+    |
+help: Remove whitespace from blank line
+
+E501 Line too long (102 > 100)
+   --> app/main.py:606:101
+    |
+605 |             await db.commit()
+606 |             print(f"[OK] Seed data da Sprint 5 injetado com sucesso ({len(seed_players)} jogadores).")
+    |                                                                                                     ^^
+    |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> app/models.py:9:1
+   |
+ 7 |   """
+ 8 |
+ 9 | / from __future__ import annotations
+10 | |
+11 | | import uuid
+12 | | from datetime import datetime
+13 | |
+14 | | from sqlalchemy import (
+15 | |     Boolean, Column, DateTime, Enum, Float, ForeignKey, Index,
+16 | |     Integer, String, Text, UniqueConstraint, event,
+17 | | )
+18 | | from sqlalchemy.dialects.postgresql import UUID, JSONB
+19 | | from sqlalchemy.orm import DeclarativeBase, relationship
+   | |________________________________________________________^
+   |
+help: Organize imports
+
+F401 [*] `sqlalchemy.Enum` imported but unused
+  --> app/models.py:15:32
+   |
+14 | from sqlalchemy import (
+15 |     Boolean, Column, DateTime, Enum, Float, ForeignKey, Index,
+   |                                ^^^^
+16 |     Integer, String, Text, UniqueConstraint, event,
+17 | )
+   |
+help: Remove unused import
+
+F401 [*] `sqlalchemy.event` imported but unused
+  --> app/models.py:16:46
+   |
+14 | from sqlalchemy import (
+15 |     Boolean, Column, DateTime, Enum, Float, ForeignKey, Index,
+16 |     Integer, String, Text, UniqueConstraint, event,
+   |                                              ^^^^^
+17 | )
+18 | from sqlalchemy.dialects.postgresql import UUID, JSONB
+   |
+help: Remove unused import
+
+E501 Line too long (102 > 100)
+  --> app/models.py:54:101
+   |
+53 |     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+54 |     arena_id = Column(UUID(as_uuid=True), ForeignKey("arenas.id", ondelete="CASCADE"), nullable=False)
+   |                                                                                                     ^^
+55 |     name = Column(String(200), nullable=False)
+56 |     nickname = Column(String(100))
+   |
+
+E501 Line too long (102 > 100)
+  --> app/models.py:83:101
+   |
+81 |     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+82 |     client_match_id = Column(String(100), nullable=False)  # ID gerado no mobile
+83 |     arena_id = Column(UUID(as_uuid=True), ForeignKey("arenas.id", ondelete="CASCADE"), nullable=False)
+   |                                                                                                     ^^
+84 |     team_a_player1_id = Column(UUID(as_uuid=True), ForeignKey("players.id"), nullable=False)
+85 |     team_a_player2_id = Column(UUID(as_uuid=True), ForeignKey("players.id"), nullable=False)
+   |
+
+E501 Line too long (103 > 100)
+   --> app/models.py:115:101
+    |
+114 |     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+115 |     match_id = Column(UUID(as_uuid=True), ForeignKey("matches.id", ondelete="CASCADE"), nullable=False)
+    |                                                                                                     ^^^
+116 |     player_id = Column(UUID(as_uuid=True), ForeignKey("players.id"), nullable=False)
+117 |     set_number = Column(Integer, nullable=False)
+    |
+
+E501 Line too long (104 > 100)
+   --> app/models.py:135:101
+    |
+134 |     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+135 |     player_id = Column(UUID(as_uuid=True), ForeignKey("players.id", ondelete="CASCADE"), nullable=False)
+    |                                                                                                     ^^^^
+136 |     match_id = Column(UUID(as_uuid=True), ForeignKey("matches.id", ondelete="SET NULL"))
+137 |     rating_before = Column(Float, nullable=False)
+    |
+
+E501 Line too long (102 > 100)
+   --> app/models.py:175:101
+    |
+174 |     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+175 |     arena_id = Column(UUID(as_uuid=True), ForeignKey("arenas.id", ondelete="CASCADE"), nullable=False)
+    |                                                                                                     ^^
+176 |     professor_name = Column(String(200))
+177 |     match_id = Column(UUID(as_uuid=True), ForeignKey("matches.id", ondelete="SET NULL"))
+    |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/test_api.py:6:1
+   |
+ 4 |   """
+ 5 |
+ 6 | / import pytest
+ 7 | | from fastapi.testclient import TestClient
+ 8 | |
+ 9 | | from app.main import app
+10 | |
+11 | |
+12 | | import os
+13 | | from app.database import DB_PATH
+   | |________________________________^
+14 |
+15 |   @pytest.fixture(autouse=True)
+   |
+help: Organize imports
+
+E501 Line too long (104 > 100)
+  --> tests/test_api.py:60:101
+   |
+58 |                 "score_a": 18, "score_b": 12,
+59 |                 "events": [
+60 |                     {"type": "shark_ataque", "player": "p-rafael", "timestamp": "2026-04-25T10:00:00Z"},
+   |                                                                                                     ^^^^
+61 |                     {"type": "shark_ataque", "player": "p-mateus", "timestamp": "2026-04-25T10:01:00Z"},
+62 |                 ]
+   |
+
+E501 Line too long (104 > 100)
+  --> tests/test_api.py:61:101
+   |
+59 |                 "events": [
+60 |                     {"type": "shark_ataque", "player": "p-rafael", "timestamp": "2026-04-25T10:00:00Z"},
+61 |                     {"type": "shark_ataque", "player": "p-mateus", "timestamp": "2026-04-25T10:01:00Z"},
+   |                                                                                                     ^^^^
+62 |                 ]
+63 |             }],
+   |
+
+E501 Line too long (102 > 100)
+  --> tests/test_api.py:64:101
+   |
+62 |                 ]
+63 |             }],
+64 |             "elo_provisional": {"p-rafael": 1625, "p-mateus": 1560, "p-lucas": 1575, "p-pedro": 1515},
+   |                                                                                                     ^^
+65 |             "client_version": "1.0.0",
+66 |             "elo_config_version": "v1",
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/test_elo.py:10:1
+   |
+ 8 |   """
+ 9 |
+10 | / import pytest
+11 | | import random
+12 | |
+13 | | from app.engine.elo import (
+14 | |     ELOEngine,
+15 | |     ELOSimplified,
+16 | |     Evento,
+17 | |     Fundamento,
+18 | |     IdempotencyStore,
+19 | |     MatchResult,
+20 | |     SetResult,
+21 | |     get_k_factor,
+22 | | )
+   | |_^
+   |
+help: Organize imports
+
+E501 Line too long (108 > 100)
+   --> tests/test_elo.py:189:101
+    |
+187 |                 k = get_k_factor(counts[pid])
+188 |                 opp_avg = avg_b if is_a else avg_a
+189 |                 simplified = ELOSimplified.calculate(ratings[pid], opp_avg, won_a if is_a else not won_a, k)
+    |                                                                                                     ^^^^^^^^
+190 |                 delta = abs(full[pid] - simplified)
+191 |                 if delta <= 5.0:
+    |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> tests/test_happy_path.py:18:1
+   |
+16 |   """
+17 |
+18 | / import pytest
+19 | | from fastapi.testclient import TestClient
+20 | | import os
+21 | |
+22 | | from app.main import app
+23 | | from app.database import DB_PATH
+   | |________________________________^
+   |
+help: Organize imports
+
+E501 Line too long (113 > 100)
+  --> tests/test_happy_path.py:89:101
+   |
+87 |                     "score_a": 18, "score_b": 12,
+88 |                     "events": [
+89 |                         {"type": "shark_ataque", "player": players["Rafa"], "timestamp": "2026-04-26T14:00:00Z"},
+   |                                                                                                     ^^^^^^^^^^^^^
+90 |                         {"type": "shark_ataque", "player": players["Rafa"], "timestamp": "2026-04-26T14:01:00Z"},
+91 |                         {"type": "peito", "player": players["Mateus"], "timestamp": "2026-04-26T14:02:00Z"},
+   |
+
+E501 Line too long (113 > 100)
+  --> tests/test_happy_path.py:90:101
+   |
+88 |                     "events": [
+89 |                         {"type": "shark_ataque", "player": players["Rafa"], "timestamp": "2026-04-26T14:00:00Z"},
+90 |                         {"type": "shark_ataque", "player": players["Rafa"], "timestamp": "2026-04-26T14:01:00Z"},
+   |                                                                                                     ^^^^^^^^^^^^^
+91 |                         {"type": "peito", "player": players["Mateus"], "timestamp": "2026-04-26T14:02:00Z"},
+92 |                         {"type": "erro_recepcao", "player": players["Lucas"], "timestamp": "2026-04-26T14:03:00Z"},
+   |
+
+E501 Line too long (108 > 100)
+  --> tests/test_happy_path.py:91:101
+   |
+89 |                         {"type": "shark_ataque", "player": players["Rafa"], "timestamp": "2026-04-26T14:00:00Z"},
+90 |                         {"type": "shark_ataque", "player": players["Rafa"], "timestamp": "2026-04-26T14:01:00Z"},
+91 |                         {"type": "peito", "player": players["Mateus"], "timestamp": "2026-04-26T14:02:00Z"},
+   |                                                                                                     ^^^^^^^^
+92 |                         {"type": "erro_recepcao", "player": players["Lucas"], "timestamp": "2026-04-26T14:03:00Z"},
+93 |                     ]
+   |
+
+E501 Line too long (115 > 100)
+  --> tests/test_happy_path.py:92:101
+   |
+90 |                         {"type": "shark_ataque", "player": players["Rafa"], "timestamp": "2026-04-26T14:01:00Z"},
+91 |                         {"type": "peito", "player": players["Mateus"], "timestamp": "2026-04-26T14:02:00Z"},
+92 |                         {"type": "erro_recepcao", "player": players["Lucas"], "timestamp": "2026-04-26T14:03:00Z"},
+   |                                                                                                     ^^^^^^^^^^^^^^^
+93 |                     ]
+94 |                 },
+   |
+
+E501 Line too long (113 > 100)
+   --> tests/test_happy_path.py:98:101
+    |
+ 96 |                     "score_a": 18, "score_b": 15,
+ 97 |                     "events": [
+ 98 |                         {"type": "shark_ataque", "player": players["Rafa"], "timestamp": "2026-04-26T14:20:00Z"},
+    |                                                                                                     ^^^^^^^^^^^^^
+ 99 |                         {"type": "peito", "player": players["Mateus"], "timestamp": "2026-04-26T14:21:00Z"},
+100 |                     ]
+    |
+
+E501 Line too long (108 > 100)
+   --> tests/test_happy_path.py:99:101
+    |
+ 97 |                     "events": [
+ 98 |                         {"type": "shark_ataque", "player": players["Rafa"], "timestamp": "2026-04-26T14:20:00Z"},
+ 99 |                         {"type": "peito", "player": players["Mateus"], "timestamp": "2026-04-26T14:21:00Z"},
+    |                                                                                                     ^^^^^^^^
+100 |                     ]
+101 |                 }
+    |
+
+E501 Line too long (114 > 100)
+   --> tests/test_happy_path.py:180:101
+    |
+178 |                     "score_a": 18, "score_b": 16,
+179 |                     "events": [
+180 |                         {"type": "shark_ataque", "player": players["Lucas"], "timestamp": "2026-04-26T15:00:00Z"},
+    |                                                                                                     ^^^^^^^^^^^^^^
+181 |                         {"type": "shark_ataque", "player": players["Pedrão"], "timestamp": "2026-04-26T15:01:00Z"},
+182 |                     ]
+    |
+
+E501 Line too long (115 > 100)
+   --> tests/test_happy_path.py:181:101
+    |
+179 |                     "events": [
+180 |                         {"type": "shark_ataque", "player": players["Lucas"], "timestamp": "2026-04-26T15:00:00Z"},
+181 |                         {"type": "shark_ataque", "player": players["Pedrão"], "timestamp": "2026-04-26T15:01:00Z"},
+    |                                                                                                     ^^^^^^^^^^^^^^^
+182 |                     ]
+183 |                 },
+    |
+
+E501 Line too long (108 > 100)
+   --> tests/test_happy_path.py:187:101
+    |
+185 |                     "score_a": 18, "score_b": 14,
+186 |                     "events": [
+187 |                         {"type": "peito", "player": players["Pedrão"], "timestamp": "2026-04-26T15:20:00Z"},
+    |                                                                                                     ^^^^^^^^
+188 |                     ]
+189 |                 }
+    |
+
+F541 [*] f-string without any placeholders
+   --> tests/test_happy_path.py:242:15
+    |
+240 |         print("\n[SHARK] HAPPY PATH COMPLETO -- Todas as fases passaram!")
+241 |         print(f"   Jogadores criados: {len(players)}")
+242 |         print(f"   Partidas jogadas: 2")
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^
+243 |         print(f"   Ranking final: {[p['name'] + ' (' + str(p['rating']) + ')' for p in ranking_v2]}")
+    |
+help: Remove extraneous `f` prefix
+
+E501 Line too long (101 > 100)
+   --> tests/test_happy_path.py:243:101
+    |
+241 |         print(f"   Jogadores criados: {len(players)}")
+242 |         print(f"   Partidas jogadas: 2")
+243 |         print(f"   Ranking final: {[p['name'] + ' (' + str(p['rating']) + ')' for p in ranking_v2]}")
+    |                                                                                                     ^
+    |
+
+Found 84 errors.
+[*] 44 fixable with the `--fix` option (9 hidden fixes can be enabled with the `--unsafe-fixes` option).
+Error: Process completed with exit code 1.
