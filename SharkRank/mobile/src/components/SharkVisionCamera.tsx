@@ -52,7 +52,6 @@ export const SharkVisionCamera = forwardRef<SharkVisionHandle, SharkVisionProps>
           if (cameraRef.current) {
             setIsRecording(true);
             recordingPromise.current = cameraRef.current.recordAsync({
-              quality: '1080p', // Força Alta Qualidade (FHD)
               maxDuration: 60,   // Limite de segurança por clipe
               mute: false,
             });
@@ -73,9 +72,7 @@ export const SharkVisionCamera = forwardRef<SharkVisionHandle, SharkVisionProps>
     startRecording: async () => {
       if (cameraRef.current && !isRecording) {
         setIsRecording(true);
-        recordingPromise.current = cameraRef.current.recordAsync({
-          quality: '1080p', // Força Alta Qualidade no início
-        });
+        recordingPromise.current = cameraRef.current.recordAsync();
         return "started";
       }
       return null;
@@ -101,8 +98,6 @@ export const SharkVisionCamera = forwardRef<SharkVisionHandle, SharkVisionProps>
         ref={cameraRef}
         mode="video"
         facing="back"
-        autofocus="on"
-        whiteBalance="auto"
         responsiveOrientationWhenOrientationLocked
       />
       

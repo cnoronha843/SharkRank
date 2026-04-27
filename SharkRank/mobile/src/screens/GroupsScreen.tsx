@@ -76,8 +76,8 @@ export function GroupsModal({ visible, onClose }: { visible: boolean; onClose: (
     } catch (e) {
       // Mock de ranking
       setGroupRanking([
-        { id: 'p1', name: 'Carlão', wins: 15, points: 45, errors: 4, rating: 1400 },
-        { id: 'p2', name: 'Lucas', wins: 12, points: 38, errors: 7, rating: 1350 },
+        { id: 'p1', name: 'Carlão', wins: 15, points: 45, errors: 4, rating: 1400, matches_played: 20 },
+        { id: 'p2', name: 'Lucas', wins: 12, points: 38, errors: 7, rating: 1350, matches_played: 18 },
       ]);
     } finally {
       setLoadingRanking(false);
