@@ -53,7 +53,6 @@ export const SharkVisionCamera = forwardRef<SharkVisionHandle, SharkVisionProps>
             setIsRecording(true);
             recordingPromise.current = cameraRef.current.recordAsync({
               maxDuration: 60,   // Limite de segurança por clipe
-              mute: false,
             });
           }
         }, 150); 
