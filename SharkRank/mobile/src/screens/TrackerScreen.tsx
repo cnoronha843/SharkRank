@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Alert, Modal, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { FundamentoButton } from '../components/FundamentoButton';
 import { CalibrationSurvey } from '../components/CalibrationSurvey';
 import { PlayerSelectScreen } from './PlayerSelectScreen';
@@ -63,6 +64,7 @@ export function TrackerScreen() {
   const [provisionalELO, setProvisionalELO] = useState<Record<string, number> | null>(null);
   const [showSurvey, setShowSurvey] = useState(false);
   const [replayUri, setReplayUri] = useState<string | null>(null);
+  const [isCameraFull, setIsCameraFull] = useState(false);
   const sharkVisionRef = useRef<SharkVisionHandle>(null);
 
   const matchId = useState(() => Date.now().toString(36) + Math.random().toString(36).substr(2, 9))[0];
@@ -299,78 +301,162 @@ export function TrackerScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* SharkVision AI Overlay (Sprint 8) */}
-      {isConfigured && !matchFinished && (
-        <SharkVisionCamera ref={sharkVisionRef} />
+      {/* SharkVision AI - Modo Normal */}
+      {isConfigured && !matchFinished && !isCameraFull && (
+        <SharkVisionCamera 
+          ref={sharkVisionRef} 
+          isFull={false} 
+          onToggleFull={() => setIsCameraFull(true)} 
+        />
       )}
 
-      {/* Placar e Sets */}
-      <View style={styles.scoreboard}>
-        <View style={styles.scoreTeam}>
-          <Text style={styles.scoreLabel}>Time A</Text>
-          <Text style={styles.scoreValue}>{scoreA}</Text>
-          <Text style={styles.setsLabel}>Sets: {setsA}</Text>
-        </View>
-        <View style={styles.scoreDivider}>
-          <Text style={styles.vsText}>×</Text>
-          {allSets.length > 0 && (
-            <Text style={{color: COLORS.textMuted, fontSize: 10, marginTop: 5}}>
-              {allSets.map(s => `${s.scoreA}x${s.scoreB}`).join(' ')}
-            </Text>
-          )}
-        </View>
-        <View style={styles.scoreTeam}>
-          <Text style={styles.scoreLabel}>Time B</Text>
-          <Text style={styles.scoreValue}>{scoreB}</Text>
-          <Text style={styles.setsLabel}>Sets: {setsB}</Text>
-        </View>
-      </View>
-
-      <Text style={{color: COLORS.textSecondary, textAlign: 'center', marginBottom: 10}}>Quem pontuou?</Text>
-
-      {/* Grid de Jogadores */}
-      <View style={styles.playersGrid}>
-        <View style={styles.teamCol}>
-          {selectedTeams.teamA.map(p => (
-            <TouchableOpacity key={p.id} style={styles.playerBtn} onPress={() => setActivePlayerForAction(p)}>
-              <Text style={styles.playerBtnText}>{p.name}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-        <View style={styles.teamCol}>
-          {selectedTeams.teamB.map(p => (
-            <TouchableOpacity key={p.id} style={styles.playerBtn} onPress={() => setActivePlayerForAction(p)}>
-              <Text style={styles.playerBtnText}>{p.name}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
-      <TouchableOpacity style={styles.woBtn} onPress={manualEndMatch}>
-        <Text style={styles.woBtnText}>Encerrar Partida (WO)</Text>
-      </TouchableOpacity>
-
-      {/* Histórico de Pontos (Sprint 8) */}
-      <View style={styles.historySection}>
-        <Text style={styles.historyTitle}>Últimos Pontos</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.historyScroll}>
-          {events.slice().reverse().map((item, idx) => {
-            const p = [...selectedTeams.teamA, ...selectedTeams.teamB].find(p => p.id === item.player);
-            const fundamento = FUNDAMENTOS.find(f => f.key === item.type);
-            return (
-              <View key={idx} style={styles.historyCard}>
-                <Text style={styles.historyEmoji}>{fundamento?.emoji}</Text>
-                <Text style={styles.historyName}>{p?.name.split(' ')[0]}</Text>
-                {item.videoUri && (
-                  <TouchableOpacity style={styles.miniReplayBtn} onPress={() => setReplayUri(item.videoUri!)}>
-                    <Text style={styles.miniReplayIcon}>🎥</Text>
-                  </TouchableOpacity>
-                )}
+      {/* SharkVision AI - Modo FullScreen (Solução Atômica via Modal) */}
+      <Modal 
+        visible={isCameraFull} 
+        animationType="fade" 
+        transparent={false}
+        onRequestClose={() => setIsCameraFull(false)}
+      >
+        <View style={{ flex: 1, backgroundColor: '#000' }}>
+          <SharkVisionCamera 
+            ref={sharkVisionRef} 
+            isFull={true} 
+            onToggleFull={() => setIsCameraFull(false)} 
+          />
+          
+          {/* Overlay de Marcação Rápida no Modal */}
+          <View style={styles.fullOverlay} pointerEvents="box-none">
+            {/* Placar Central de Topo */}
+            <View style={styles.fullScoreboard} pointerEvents="none">
+              <View style={{alignItems: 'center'}}>
+                <Text style={styles.fullScoreValue}>{scoreA}</Text>
+                <Text style={styles.fullSetsText}>{setsA} SETS</Text>
               </View>
-            );
-          })}
-        </ScrollView>
-      </View>
+              <Text style={styles.fullScoreDivider}>×</Text>
+              <View style={{alignItems: 'center'}}>
+                <Text style={styles.fullScoreValue}>{scoreB}</Text>
+                <Text style={styles.fullSetsText}>{setsB} SETS</Text>
+              </View>
+            </View>
+
+            <View style={styles.fullTeamCol} pointerEvents="box-none">
+              <Text style={styles.fullTeamLabel}>TIME A</Text>
+              {selectedTeams.teamA.map(p => (
+                <TouchableOpacity key={p.id} style={styles.fullPlayerBtn} onPress={() => setActivePlayerForAction(p)}>
+                  <Text style={styles.fullPlayerText}>{p.name.split(' ')[0]}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <View style={styles.fullTeamCol} pointerEvents="box-none">
+              <Text style={styles.fullTeamLabel}>TIME B</Text>
+              {selectedTeams.teamB.map(p => (
+                <TouchableOpacity key={p.id} style={styles.fullPlayerBtn} onPress={() => setActivePlayerForAction(p)}>
+                  <Text style={styles.fullPlayerText}>{p.name.split(' ')[0]}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 150 }} // Espaço extra para a TabBar
+      >
+        {/* Placar e Sets */}
+        <View style={styles.scoreboard}>
+          <View style={styles.scoreTeam}>
+            <Text style={styles.scoreLabel}>TIME A</Text>
+            <Text style={styles.scoreValue}>{scoreA}</Text>
+            <Text style={styles.setsLabel}>{setsA} SETS</Text>
+          </View>
+          
+          <View style={styles.scoreDivider}>
+            <View style={styles.probabilityBarContainer}>
+               <View style={[styles.probabilityBar, { 
+                 width: '100%', 
+                 backgroundColor: COLORS.bgTertiary,
+                 position: 'absolute' 
+               }]} />
+               <View style={[styles.probabilityBar, { 
+                 width: `${(scoreA / (scoreA + scoreB + 0.1)) * 100}%`, 
+                 backgroundColor: COLORS.accent 
+               }]} />
+            </View>
+            <Text style={styles.vsText}>VS</Text>
+            {allSets.length > 0 && (
+              <Text style={{color: COLORS.accent, fontSize: 9, fontWeight: '900', marginTop: 10}}>
+                LIVE
+              </Text>
+            )}
+          </View>
+
+          <View style={styles.scoreTeam}>
+            <Text style={styles.scoreLabel}>TIME B</Text>
+            <Text style={styles.scoreValue}>{scoreB}</Text>
+            <Text style={styles.setsLabel}>{setsB} SETS</Text>
+          </View>
+        </View>
+
+        <Text style={{color: COLORS.textMuted, fontSize: 10, fontWeight: '800', textAlign: 'center', marginTop: 25, letterSpacing: 3, textTransform: 'uppercase'}}>
+          Selecione o Atleta
+        </Text>
+
+        {/* Grid de Jogadores */}
+        <View style={styles.playersGrid}>
+          <View style={styles.teamCol}>
+            {selectedTeams.teamA.map(p => (
+              <TouchableOpacity key={p.id} style={styles.playerBtn} onPress={() => setActivePlayerForAction(p)}>
+                <Text style={styles.playerBtnText}>{p.name.split(' ')[0]}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <View style={styles.teamCol}>
+            {selectedTeams.teamB.map(p => (
+              <TouchableOpacity key={p.id} style={styles.playerBtn} onPress={() => setActivePlayerForAction(p)}>
+                <Text style={styles.playerBtnText}>{p.name.split(' ')[0]}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        <TouchableOpacity style={styles.woBtn} onPress={manualEndMatch}>
+          <Text style={styles.woBtnText}>Encerrar Partida (W.O.)</Text>
+        </TouchableOpacity>
+
+        {/* Histórico de Pontos Prime */}
+        <View style={styles.historySection}>
+          <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15}}>
+            <Text style={styles.historyTitle}>CRONOLOGIA DE PONTOS</Text>
+            <View style={{width: 40, height: 2, backgroundColor: COLORS.accent + '40'}} />
+          </View>
+          
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.historyScroll}>
+            {events.slice().reverse().map((item, idx) => {
+              const p = [...selectedTeams.teamA, ...selectedTeams.teamB].find(p => p.id === item.player);
+              const fundamento = FUNDAMENTOS.find(f => f.key === item.type);
+              const isError = fundamento?.isError;
+              
+              return (
+                <View key={idx} style={[styles.historyCard, isError && {borderColor: COLORS.error + '40'}]}>
+                  <View style={[styles.historyBadge, {backgroundColor: isError ? COLORS.error : COLORS.accent}]}>
+                    <Text style={styles.historyEmoji}>{fundamento?.emoji}</Text>
+                  </View>
+                  <Text style={styles.historyName}>{p?.name.split(' ')[0]}</Text>
+                  <Text style={styles.historyFundamento}>{fundamento?.label}</Text>
+                  
+                  {item.videoUri && (
+                    <TouchableOpacity style={styles.miniReplayBtn} onPress={() => setReplayUri(item.videoUri!)}>
+                      <Ionicons name="play" size={12} color={COLORS.accent} />
+                    </TouchableOpacity>
+                  )}
+                </View>
+              );
+            })}
+          </ScrollView>
+        </View>
+      </ScrollView>
 
       {/* Modal de Ações */}
       <Modal visible={!!activePlayerForAction} transparent animationType="slide">
@@ -432,29 +518,92 @@ export function TrackerScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.bgPrimary },
-  scoreboard: { flexDirection: 'row', backgroundColor: COLORS.bgSecondary, padding: 20, margin: 16, borderRadius: BORDER_RADIUS.md },
+  container: { 
+    flex: 1, 
+    backgroundColor: COLORS.bgPrimary,
+    paddingBottom: 120, // Garante que NADA fique embaixo da TabBar flutuante
+  },
+  scoreboard: { 
+    flexDirection: 'row', 
+    backgroundColor: 'rgba(15, 23, 42, 0.8)', 
+    padding: 15, 
+    marginHorizontal: 16, 
+    marginTop: 15,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 212, 255, 0.2)',
+    shadowColor: COLORS.accent,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 10,
+  },
   scoreTeam: { flex: 1, alignItems: 'center' },
-  scoreDivider: { width: 50, alignItems: 'center', justifyContent: 'center' },
-  scoreLabel: { color: COLORS.textSecondary, fontSize: 14, fontWeight: '600' },
-  scoreValue: { color: COLORS.textPrimary, fontSize: 64, fontWeight: '800' },
-  setsLabel: { color: COLORS.accent, fontSize: 14, fontWeight: '700' },
-  vsText: { color: COLORS.textMuted, fontSize: 24, fontWeight: 'bold' },
-  playersGrid: { flexDirection: 'row', marginHorizontal: 16, gap: 16, flex: 1 },
-  teamCol: { flex: 1, gap: 16 },
-  playerBtn: { backgroundColor: COLORS.bgTertiary, flex: 1, borderRadius: BORDER_RADIUS.md, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: COLORS.border },
-  playerBtnText: { color: COLORS.textPrimary, fontSize: 18, fontWeight: 'bold' },
-  woBtn: { backgroundColor: 'transparent', borderWidth: 1, borderColor: COLORS.error, margin: 16, padding: 16, borderRadius: BORDER_RADIUS.sm, alignItems: 'center' },
-  woBtnText: { color: COLORS.error, fontWeight: 'bold' },
+  scoreDivider: { width: 60, alignItems: 'center', justifyContent: 'center' },
+  scoreLabel: { color: COLORS.accent, fontSize: 10, fontWeight: '900', letterSpacing: 2, marginBottom: 5 },
+  scoreValue: { color: '#FFF', fontSize: 48, fontWeight: '900', textShadowColor: COLORS.accent, textShadowRadius: 15 },
+  setsLabel: { backgroundColor: 'rgba(0, 212, 255, 0.1)', color: COLORS.accent, fontSize: 10, fontWeight: '800', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10, marginTop: 5 },
+  vsText: { color: 'rgba(255,255,255,0.1)', fontSize: 28, fontWeight: '900', fontStyle: 'italic' },
   
-  historySection: { marginHorizontal: 16, marginBottom: 20 },
-  historyTitle: { color: COLORS.textSecondary, fontSize: 12, fontWeight: 'bold', marginBottom: 10 },
-  historyScroll: { gap: 10 },
-  historyCard: { backgroundColor: COLORS.bgSecondary, padding: 10, borderRadius: 10, alignItems: 'center', minWidth: 80, borderWidth: 1, borderColor: COLORS.border },
-  historyEmoji: { fontSize: 20 },
-  historyName: { color: COLORS.textPrimary, fontSize: 10, fontWeight: 'bold' },
-  miniReplayBtn: { marginTop: 5, backgroundColor: COLORS.accent + '20', padding: 4, borderRadius: 5 },
-  miniReplayIcon: { fontSize: 12 },
+  playersGrid: { flexDirection: 'row', marginHorizontal: 16, gap: 12, marginTop: 20 },
+  teamCol: { flex: 1, gap: 12 },
+  playerBtn: { 
+    backgroundColor: 'rgba(30, 41, 59, 0.5)', 
+    paddingVertical: 18, 
+    borderRadius: 15, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    borderWidth: 1, 
+    borderColor: 'rgba(255,255,255,0.1)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+  },
+  playerBtnText: { color: '#FFF', fontSize: 15, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1 },
+  woBtn: { marginTop: 30, marginBottom: 20, marginHorizontal: 40, padding: 12, borderRadius: 30, alignItems: 'center', borderStyle: 'dashed', borderWidth: 1, borderColor: COLORS.textMuted },
+  woBtnText: { color: COLORS.textMuted, fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 2 },
+  
+  historySection: { marginHorizontal: 16, marginBottom: 20, marginTop: 10 },
+  historyTitle: { color: COLORS.accent, fontSize: 10, fontWeight: '900', letterSpacing: 1.5 },
+  historyScroll: { gap: 15, paddingRight: 20 },
+  historyCard: { 
+    backgroundColor: 'rgba(30, 41, 59, 0.4)', 
+    padding: 12, 
+    borderRadius: 18, 
+    alignItems: 'center', 
+    minWidth: 100, 
+    borderWidth: 1, 
+    borderColor: 'rgba(255,255,255,0.05)' 
+  },
+  historyBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+  },
+  historyEmoji: { fontSize: 16 },
+  historyName: { color: '#FFF', fontSize: 11, fontWeight: '800' },
+  historyFundamento: { color: COLORS.textMuted, fontSize: 9, fontWeight: '600', marginTop: 2 },
+  miniReplayBtn: { marginTop: 8, backgroundColor: 'rgba(0, 212, 255, 0.1)', padding: 6, borderRadius: 10 },
+
+  probabilityBarContainer: {
+    width: '100%',
+    height: 4,
+    borderRadius: 2,
+    overflow: 'hidden',
+    marginBottom: 15,
+  },
+  probabilityBar: {
+    height: '100%',
+    borderRadius: 2,
+  },
 
   replayModalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', justifyContent: 'center', alignItems: 'center' },
   replayContainer: { width: '90%', height: '80%', backgroundColor: '#000', borderRadius: 20, overflow: 'hidden' },
@@ -499,4 +648,76 @@ const styles = StyleSheet.create({
   },
   newMatchBtn: { backgroundColor: COLORS.accent, padding: 16, borderRadius: BORDER_RADIUS.md, width: '100%', alignItems: 'center' },
   newMatchBtnText: { color: COLORS.bgPrimary, fontSize: 16, fontWeight: 'bold' },
+  
+  // FullScreen Score Overlay
+  fullOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 100, // Evita notch e bottom bar
+    zIndex: 99999, // Acima de TUDO
+  },
+  fullTeamCol: {
+    width: '45%',
+    justifyContent: 'center',
+    gap: 15,
+  },
+  fullPlayerBtn: {
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    paddingVertical: 15,
+    paddingHorizontal: 10,
+    borderRadius: 15,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+  },
+  fullPlayerText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: '900',
+    textShadowColor: '#000',
+    textShadowRadius: 4,
+  },
+  fullTeamLabel: {
+    color: COLORS.accent,
+    fontSize: 10,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 5,
+    letterSpacing: 2,
+  },
+  fullScoreboard: {
+    position: 'absolute',
+    top: 100, // Zona Neutra: Abaixo dos controles de hardware, acima dos botes
+    left: '28%',
+    right: '28%',
+    backgroundColor: 'rgba(0,0,0,0.85)',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    gap: 12,
+    zIndex: 99999,
+  },
+  fullScoreValue: {
+    color: '#FFF',
+    fontSize: 20,
+    fontWeight: '900',
+  },
+  fullScoreDivider: {
+    color: COLORS.accent,
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  fullSetsText: {
+    color: COLORS.textSecondary,
+    fontSize: 8,
+    fontWeight: 'bold',
+    marginTop: 1,
+    letterSpacing: 1,
+  },
 });

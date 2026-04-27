@@ -101,7 +101,8 @@ export function PlayerSelectScreen({ arenaId, onTeamsSelected, onCancel }: Props
     : players;
 
   return (
-    <SafeAreaView style={styles.container} testID="sr_screen_player_select">
+    <View style={styles.container} testID="sr_screen_player_select">
+
       {/* Header */}
       <View style={styles.header}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -143,7 +144,8 @@ export function PlayerSelectScreen({ arenaId, onTeamsSelected, onCancel }: Props
         <FlatList
           data={availablePlayers}
           keyExtractor={item => item.id}
-          contentContainerStyle={{ paddingBottom: 100 }}
+          style={{ flex: 1 }} // Garante que a lista não empurre o footer para fora
+          contentContainerStyle={{ paddingBottom: 20 }}
           renderItem={({ item }) => {
             const isSelected = selected.includes(item.id);
             const tier = getTier(item.rating);
@@ -208,12 +210,14 @@ export function PlayerSelectScreen({ arenaId, onTeamsSelected, onCancel }: Props
           onPress={confirmTeam}
           disabled={selected.length !== 2}
         >
-          <Text style={styles.confirmBtnText}>
-            {step === 'teamA' ? 'Confirmar Time A →' : '⚡ Iniciar Partida'}
+          <Text style={[styles.confirmBtnText, selected.length !== 2 && styles.confirmBtnTextDisabled]}>
+            {selected.length < 2 
+              ? `Selecione mais ${2 - selected.length} atleta${selected.length === 1 ? '' : 's'}`
+              : step === 'teamA' ? 'Confirmar Time A →' : '⚡ Iniciar Partida'}
           </Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -247,16 +251,31 @@ const styles = StyleSheet.create({
   checkboxSelected: { borderColor: COLORS.accent, backgroundColor: COLORS.accent },
   checkmark: { fontSize: 14, fontWeight: '800', color: COLORS.bgPrimary },
   footer: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
-    padding: SPACING.md, backgroundColor: 'rgba(6, 11, 24, 0.95)',
-    borderTopWidth: 1, borderTopColor: COLORS.border,
+    padding: SPACING.md,
+    backgroundColor: COLORS.bgSecondary,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+    paddingBottom: 120, // Subida extrema para diagnóstico
+    zIndex: 999, // Garante que fique por cima de tudo
   },
   confirmBtn: {
-    backgroundColor: COLORS.accent, padding: 16, borderRadius: BORDER_RADIUS.md,
+    backgroundColor: COLORS.accent,
+    padding: 16,
+    borderRadius: BORDER_RADIUS.md,
     alignItems: 'center',
   },
-  confirmBtnDisabled: { opacity: 0.3 },
-  confirmBtnText: { fontSize: 16, fontWeight: '700', color: COLORS.bgPrimary },
+  confirmBtnDisabled: { 
+    backgroundColor: COLORS.bgTertiary, // Muda de azul para cinza neutro
+    opacity: 0.5 
+  },
+  confirmBtnText: { 
+    fontSize: 16, 
+    fontWeight: '700', 
+    color: COLORS.bgPrimary 
+  },
+  confirmBtnTextDisabled: {
+    color: COLORS.textMuted
+  },
   
   empty: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 },
   emptyEmoji: { fontSize: 64, marginBottom: 20 },

@@ -4,23 +4,27 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, FlatList, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, FlatList, ActivityIndicator, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS, SPACING, BORDER_RADIUS, getTier } from '../theme';
 import { api } from '../services/api';
 import { getFlag } from '../services/flags';
+import { GroupsModal } from './GroupsScreen';
 
 interface Player {
   id: string;
   name: string;
   rating: number;
   matches_played: number;
+  wins: number;
 }
 
 export function DashboardScreen() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
   const [calibrationReport, setCalibrationReport] = useState<any>(null);
+  const [recentMatches, setRecentMatches] = useState<any[]>([]);
+  const [showGroupsModal, setShowGroupsModal] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -28,14 +32,21 @@ export function DashboardScreen() {
 
   const loadData = async () => {
     try {
-      const [rankingData, reportData] = await Promise.all([
-        api.getArenaRanking('arena-blumenau-01'),
-        getFlag('SHADOW_MODE') ? api.getCalibrationReport('arena-blumenau-01') : Promise.resolve(null),
+      const arenaId = 'arena-blumenau-01';
+      const [rankingData, reportData, matchesData] = await Promise.all([
+        api.getArenaRanking(arenaId),
+        getFlag('SHADOW_MODE') ? api.getCalibrationReport(arenaId) : Promise.resolve(null),
+        api.getArenaMatches(arenaId),
       ]);
-      setPlayers(rankingData.ranking);
+      
+      // Ordenar por vitórias para pegar o Top Atleta real
+      const sorted = [...rankingData.ranking].sort((a, b) => (b.wins || 0) - (a.wins || 0));
+      setPlayers(sorted);
+      setRecentMatches(matchesData?.matches || []);
+      
       if (reportData) setCalibrationReport(reportData);
     } catch (e) {
-      // Offline — mostrar dados locais futuramente
+      // Offline
     } finally {
       setLoading(false);
     }
@@ -46,100 +57,112 @@ export function DashboardScreen() {
 
   return (
     <SafeAreaView style={styles.container} testID="sr_screen_dashboard">
-      <Text style={styles.greeting}>Olá! 👋</Text>
-      <Text style={styles.subtitle}>Painel de telemetria SharkRank</Text>
+      <GroupsModal visible={showGroupsModal} onClose={() => setShowGroupsModal(false)} />
+      
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+        <Text style={styles.greeting}>Olá! 👋</Text>
+        <Text style={styles.subtitle}>Painel de telemetria SharkRank</Text>
 
-      {/* Stats */}
-      <View style={styles.statsRow}>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>{players.length}</Text>
-          <Text style={styles.statLabel}>ATLETAS</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>
-            {players.length ? Math.round(players.reduce((s, p) => s + p.rating, 0) / players.length) : 0}
-          </Text>
-          <Text style={styles.statLabel}>RATING MÉDIO</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>
-            {players.reduce((s, p) => s + p.matches_played, 0)}
-          </Text>
-          <Text style={styles.statLabel}>PARTIDAS</Text>
-        </View>
-      </View>
-
-      {/* Top Athlete */}
-      {top && topTier && (
-        <View style={styles.topCard}>
-          <Text style={styles.topEmoji}>{topTier.emoji}</Text>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.topName}>{top.name}</Text>
-            <Text style={[styles.topTier, { color: topTier.color }]}>{topTier.name} · {top.rating}</Text>
+        {/* Stats */}
+        <View style={styles.statsRow}>
+          <View style={styles.statCard}>
+            <Text style={styles.statValue}>{players.length}</Text>
+            <Text style={styles.statLabel}>ATLETAS</Text>
           </View>
-          <Text style={styles.topRating}>#1</Text>
+          <View style={styles.statCard}>
+            <Text style={styles.statValue}>
+              {players.reduce((s, p) => s + (p.wins || 0), 0)}
+            </Text>
+            <Text style={styles.statLabel}>VITÓRIAS TOTAIS</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statValue}>
+              {players.reduce((s, p) => s + p.matches_played, 0)}
+            </Text>
+            <Text style={styles.statLabel}>PARTIDAS</Text>
+          </View>
         </View>
-      )}
 
-      {/* Shadow Mode - Painel do Professor */}
-      {getFlag('SHADOW_MODE') && calibrationReport && (
-        <View style={styles.calibrationCard}>
-          <Text style={styles.calibrationTitle}>🔬 Status da Calibração (Beta)</Text>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
-            <View>
-              <Text style={styles.calibrationLabel}>Precisão</Text>
-              <Text style={styles.calibrationValue}>{calibrationReport.avg_accuracy_score} / 5.0</Text>
+        {/* Top Athlete */}
+        {top && topTier && (
+          <View style={styles.topCard}>
+            <Text style={styles.topEmoji}>{topTier.emoji}</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.topName}>{top.name}</Text>
+              <Text style={[styles.topTier, { color: topTier.color }]}>{topTier.name} · {top.wins || 0} Vitórias</Text>
             </View>
-            <View>
-              <Text style={styles.calibrationLabel}>Adoção</Text>
-              <Text style={styles.calibrationValue}>{calibrationReport.would_use_pct}%</Text>
-            </View>
-            <View>
-              <Text style={styles.calibrationLabel}>Gate Status</Text>
-              <Text style={[styles.calibrationValue, { color: calibrationReport.gate_status === 'APPROVED' ? COLORS.success : COLORS.warning }]}>
-                {calibrationReport.gate_status}
-              </Text>
-            </View>
+            <Text style={styles.topRating}>#1</Text>
           </View>
-        </View>
-      )}
+        )}
 
-      {/* Quick Actions */}
-      <Text style={styles.sectionTitle}>Ações Rápidas</Text>
-      <View style={styles.actionsRow}>
-        <View style={styles.actionCard}>
-          <Text style={{ fontSize: 28 }}>⚡</Text>
-          <Text style={styles.actionText}>Nova Partida</Text>
-        </View>
-        <View style={styles.actionCard}>
-          <Text style={{ fontSize: 28 }}>👥</Text>
-          <Text style={styles.actionText}>Novo Atleta</Text>
-        </View>
-        <View style={styles.actionCard}>
-          <Text style={{ fontSize: 28 }}>🏟️</Text>
-          <Text style={styles.actionText}>Quadras</Text>
-        </View>
-      </View>
+        {/* Shadow Mode - Painel do Professor */}
+        {getFlag('SHADOW_MODE') && calibrationReport && (
+          <View style={styles.calibrationCard}>
+            <Text style={styles.calibrationTitle}>🔬 Status da Calibração (Beta)</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
+              <View>
+                <Text style={styles.calibrationLabel}>Precisão</Text>
+                <Text style={styles.calibrationValue}>{calibrationReport.avg_accuracy_score} / 5.0</Text>
+              </View>
+              <View>
+                <Text style={styles.calibrationLabel}>Adoção</Text>
+                <Text style={styles.calibrationValue}>{calibrationReport.would_use_pct}%</Text>
+              </View>
+              <View>
+                <Text style={styles.calibrationLabel}>Gate Status</Text>
+                <Text style={[styles.calibrationValue, { color: calibrationReport.gate_status === 'APPROVED' ? COLORS.success : COLORS.warning }]}>
+                  {calibrationReport.gate_status}
+                </Text>
+              </View>
+            </View>
+          </View>
+        )}
 
-      {/* Recent Matches (Mock) */}
-      <Text style={styles.sectionTitle}>Últimas Partidas</Text>
-      <View style={styles.recentMatchCard}>
-        <View style={styles.matchHeader}>
-          <Text style={styles.matchStatus}>Ao Vivo</Text>
-          <Text style={styles.matchTime}>Quadra 1</Text>
+        {/* Quick Actions */}
+        <Text style={styles.sectionTitle}>Ações Rápidas</Text>
+        <View style={styles.actionsRow}>
+          <TouchableOpacity style={styles.actionCard} onPress={() => {}}>
+            <Text style={{ fontSize: 28 }}>⚡</Text>
+            <Text style={styles.actionText}>Nova Partida</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionCard} onPress={() => {}}>
+            <Text style={{ fontSize: 28 }}>👥</Text>
+            <Text style={styles.actionText}>Novo Atleta</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionCard} onPress={() => setShowGroupsModal(true)}>
+            <Text style={{ fontSize: 28 }}>🏘️</Text>
+            <Text style={styles.actionText}>Meus Grupos</Text>
+          </TouchableOpacity>
         </View>
-        <View style={styles.matchScoreboard}>
-          <View style={styles.teamInfo}>
-            <Text style={styles.teamName}>Rafa & Gui</Text>
-            <Text style={styles.teamScore}>14</Text>
+
+        {/* Recent Matches (Reais) */}
+        <Text style={styles.sectionTitle}>Últimas Partidas</Text>
+        {recentMatches.length === 0 ? (
+          <View style={[styles.recentMatchCard, { borderStyle: 'dashed', borderColor: COLORS.textMuted }]}>
+            <Text style={{ color: COLORS.textMuted, textAlign: 'center' }}>Nenhuma partida registrada hoje.</Text>
           </View>
-          <Text style={styles.vs}>X</Text>
-          <View style={styles.teamInfo}>
-            <Text style={styles.teamScore}>12</Text>
-            <Text style={styles.teamName}>Carlão & Lucas</Text>
-          </View>
-        </View>
-      </View>
+        ) : (
+          recentMatches.slice(0, 3).map((match, idx) => (
+            <View key={idx} style={[styles.recentMatchCard, { marginBottom: 10 }]}>
+              <View style={styles.matchHeader}>
+                <Text style={[styles.matchStatus, { color: COLORS.success }]}>Finalizada</Text>
+                <Text style={styles.matchTime}>{new Date(match.date).toLocaleDateString('pt-BR')}</Text>
+              </View>
+              <View style={styles.matchScoreboard}>
+                <View style={styles.teamInfo}>
+                  <Text style={styles.teamName}>{match.teamA_name}</Text>
+                  <Text style={styles.teamScore}>{match.scoreA}</Text>
+                </View>
+                <Text style={styles.vs}>X</Text>
+                <View style={styles.teamInfo}>
+                  <Text style={styles.teamScore}>{match.scoreB}</Text>
+                  <Text style={styles.teamName}>{match.teamB_name}</Text>
+                </View>
+              </View>
+            </View>
+          ))
+        )}
+      </ScrollView>
     </SafeAreaView>
   );
 }

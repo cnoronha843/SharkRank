@@ -72,4 +72,29 @@ export const api = {
 
   getPlayerMatches: (player_id: string) =>
     apiFetch<any>(`/players/${player_id}/matches`),
+
+  getArenaMatches: (arena_id: string) =>
+    apiFetch<any>(`/arenas/${arena_id}/matches`),
+
+  createMatch: (arenaId: string, data: any) =>
+    apiFetch<any>(`/arenas/${arenaId}/matches`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  // === GROUPS ===
+  getArenaGroups: (arenaId: string) =>
+    apiFetch<any>(`/arenas/${arenaId}/groups`),
+
+  createGroup: (arenaId: string, data: { name: string; sport: string }) =>
+    apiFetch<any>(`/arenas/${arenaId}/groups`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  getGroupMembers: (groupId: string) =>
+    apiFetch<any>(`/groups/${groupId}/members`),
+
+  getGroupRanking: (groupId: string) =>
+    apiFetch<any>(`/groups/${groupId}/ranking`),
 };

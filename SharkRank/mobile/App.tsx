@@ -39,16 +39,6 @@ const SharkTheme = {
   },
 };
 
-function CenterTabIcon({ focused }: { focused: boolean }) {
-  return (
-    <LinearGradient
-      colors={focused ? [COLORS.accentOrange, '#FF512F'] : [COLORS.accent, '#00C6FF']}
-      style={[styles.centerBtn, focused && styles.centerBtnActive]}
-    >
-      <Ionicons name="flash" size={28} color="#FFF" />
-    </LinearGradient>
-  );
-}
 
 export default function App() {
   const [ready, setReady] = useState(false);
@@ -108,13 +98,11 @@ export default function App() {
             tabBarActiveTintColor: COLORS.accent,
             tabBarInactiveTintColor: COLORS.textMuted,
             tabBarIcon: ({ focused, color, size }) => {
-              if (route.name === 'Tracker') {
-                return <CenterTabIcon focused={focused} />;
-              }
-
               let iconName: any = 'home';
+              
               if (route.name === 'Dashboard') iconName = focused ? 'home' : 'home-outline';
               else if (route.name === 'Ranking') iconName = focused ? 'trophy' : 'trophy-outline';
+              else if (route.name === 'Tracker') iconName = focused ? 'flash' : 'flash-outline';
               else if (route.name === 'SharkVision') iconName = focused ? 'play-circle' : 'play-circle-outline';
               else if (route.name === 'Settings') iconName = focused ? 'person' : 'person-outline';
 
@@ -134,24 +122,6 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  centerBtn: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 40, // Sobe o botão
-    shadowColor: COLORS.accent,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.8,
-    shadowRadius: 15,
-    elevation: 15,
-    borderWidth: 4,
-    borderColor: COLORS.bgPrimary,
-  },
-  centerBtnActive: {
-    shadowColor: COLORS.accentOrange,
-  },
   splash: {
     flex: 1,
     backgroundColor: COLORS.bgPrimary,

@@ -23,7 +23,9 @@ interface Player {
   name: string;
   rating: number;
   matches_played: number;
-  wins?: number;
+  wins: number;
+  points: number;
+  errors: number;
 }
 
 export function RankingScreen() {
@@ -65,7 +67,18 @@ export function RankingScreen() {
   const loadRanking = async () => {
     try {
       const data = await api.getArenaRanking('arena-blumenau-01');
-      setPlayers(data.ranking);
+      
+      // LÓGICA DE RANKING SHARKRANK V2
+      // 1. Vitórias (DESC)
+      // 2. Pontos (DESC)
+      // 3. Menos Erros (ASC)
+      const sortedRanking = [...data.ranking].sort((a, b) => {
+        if ((b.wins || 0) !== (a.wins || 0)) return (b.wins || 0) - (a.wins || 0);
+        if ((b.points || 0) !== (a.points || 0)) return (b.points || 0) - (a.points || 0);
+        return (a.errors || 0) - (b.errors || 0);
+      });
+
+      setPlayers(sortedRanking);
     } catch {} finally {
       setLoading(false);
     }
@@ -177,11 +190,12 @@ export function RankingScreen() {
                   </View>
                   <View style={styles.info}>
                     <Text style={styles.name}>{item.name}</Text>
-                    <Text style={styles.meta}>
-                      {tier.emoji} {tier.name} · {item.matches_played} partidas
-                    </Text>
+                    <View style={styles.statsRow}>
+                      <Text style={styles.statMini}>🥇 {item.wins || 0}V</Text>
+                      <Text style={styles.statMini}>☄️ {item.points || 0}P</Text>
+                      <Text style={[styles.statMini, {color: COLORS.error}]}>🚫 {item.errors || 0}E</Text>
+                    </View>
                   </View>
-                  <Text style={[styles.rating, { color: tier.color }]}>{item.rating}</Text>
                 </View>
               </TouchableOpacity>
             );
@@ -299,7 +313,8 @@ const styles = StyleSheet.create({
   posText: { color: COLORS.textSecondary, fontWeight: 'bold' },
   info: { flex: 1 },
   name: { color: COLORS.textPrimary, fontSize: 16, fontWeight: '700' },
-  meta: { color: COLORS.textSecondary, fontSize: 12, marginTop: 2 },
+  statsRow: { flexDirection: 'row', gap: 10, marginTop: 4 },
+  statMini: { color: COLORS.textSecondary, fontSize: 10, fontWeight: '800' },
   rating: { fontSize: 18, fontWeight: '900' },
 
   // Shadow Mode UI

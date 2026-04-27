@@ -114,4 +114,5 @@ export const FUNDAMENTOS = [
   { key: 'erro_saque', label: 'Erro Saque', emoji: '❌', testID: 'sr_btn_err_saq', isError: true },
   { key: 'erro_recepcao', label: 'Erro Recepção', emoji: '❌', testID: 'sr_btn_err_rec', isError: true },
   { key: 'erro_ataque', label: 'Erro Ataque', emoji: '❌', testID: 'sr_btn_err_atk', isError: true },
+  { key: 'erro_segunda', label: 'Erro 2ª Bola', emoji: '🚫', testID: 'sr_btn_err_seg', isError: true },
 ] as const;
